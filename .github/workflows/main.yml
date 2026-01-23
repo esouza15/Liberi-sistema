@@ -1,0 +1,32 @@
+name: Deploy Oficial Liberi
+
+on:
+  push:
+    branches:
+      - main  # <--- TEM QUE SER 'main' (igual criamos no passo 2)
+      - master  # Agora ele aceita tanto main quanto master!
+  workflow_dispatch: # <--- ISSO CRIA O BOTÃO MANUAL
+
+jobs:
+  web-deploy:
+    name: Deploy via FTP
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Obter código mais recente
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📂 Sincronizar arquivos (Rápido)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ./
+          # IMPORTANTE: Ignora o motor (vendor) e arquivos de sistema
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            vendor/**
