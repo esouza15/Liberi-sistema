@@ -65,18 +65,18 @@ const submit = () => {
                     </ul>
                 </div>
 
-                <div class="bg-white p-6 shadow sm:rounded-lg border-l-4 border-indigo-500">
+                <div v-if="$page.props.auth.user.is_admin" class="bg-white p-6 shadow sm:rounded-lg border-l-4 border-indigo-500">
                     <h3 class="text-lg font-bold mb-4 text-gray-800">Adicionar Nova Aula</h3>
                     
                     <form @submit.prevent="submit" class="flex gap-4 items-end">
                         <div class="flex-grow">
                             <label class="block text-gray-700 text-sm font-bold mb-1">Título da Aula</label>
-                            <input v-model="form.title" type="text" class="w-full border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: Introdução ao Módulo">
+                            <input v-model="form.title" type="text" class="w-full border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
                         
                         <div class="flex-grow">
                             <label class="block text-gray-700 text-sm font-bold mb-1">Link do Vídeo</label>
-                            <input v-model="form.video_url" type="text" class="w-full border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="https://youtube.com/...">
+                            <input v-model="form.video_url" type="text" class="w-full border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
 
                         <div class="w-24">
@@ -88,7 +88,6 @@ const submit = () => {
                             Salvar
                         </button>
                     </form>
-                    <div v-if="form.errors.video_url" class="text-red-500 text-xs mt-2">{{ form.errors.video_url }}</div>
                 </div>
 
             </div>

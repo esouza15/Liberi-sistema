@@ -21,5 +21,10 @@ class LessonController extends Controller
 
         // 3. Recarrega a página para ver a aula nova na lista
         return back();
+
+        // 4. Bloqueia se não for admin
+        if (! auth()->user()->is_admin) {
+            abort(403, 'Acesso negado.');
+        }
     }
 }
