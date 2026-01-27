@@ -1,0 +1,40 @@
+<script setup>
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head } from '@inertiajs/vue3';
+
+// Recebe a lista de cursos enviada pelo Controller
+defineProps({
+    courses: Array
+});
+</script>
+
+<template>
+    <Head title="Cursos" />
+
+    <AuthenticatedLayout>
+        <template #header>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Cursos Disponíveis
+            </h2>
+        </template>
+
+        <div class="py-12">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                    
+                    <div v-if="courses.length === 0" class="text-gray-500 text-center">
+                        Nenhum curso cadastrado ainda.
+                    </div>
+
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div v-for="course in courses" :key="course.id" class="border p-4 rounded-lg hover:shadow-lg transition">
+                            <h3 class="font-bold text-lg text-indigo-600">{{ course.title }}</h3>
+                            <p class="text-gray-600 mt-2">{{ course.description }}</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </AuthenticatedLayout>
+</template>
