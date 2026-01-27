@@ -23,6 +23,29 @@ class CourseController extends Controller
     ]);
 }
 
+// Mostra a tela de criar curso
+    public function create()
+    {
+        return Inertia::render('Courses/Create');
+    }
+
+    // Recebe os dados do formulário e salva no banco
+    public function store(Request $request)
+    {
+        // 1. Validação (Segurança)
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'video_url' => 'nullable|url'
+        ]);
+
+        // 2. Salvar no Banco
+        Course::create($validated);
+
+        // 3. Voltar para a lista com mensagem de sucesso
+        return redirect()->route('courses.index');
+    }
+
     /**
      * Show the form for creating a new resource.
      */
