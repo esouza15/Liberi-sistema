@@ -21,7 +21,7 @@ import { Head } from '@inertiajs/vue3';
                     class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
                 >
                     <div class="p-6 text-gray-900">
-                        <strong>Sucesso!</strong> Bem-vindo a Liberi Cursos.
+                        <strong>Sucesso!</strong> Bem-vindo à Liberi Cursos.
                     </div>
                 </div>
             </div>
