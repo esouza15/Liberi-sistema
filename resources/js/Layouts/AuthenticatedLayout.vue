@@ -37,7 +37,7 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
                                 >
-                                    Dashboard
+                                    Painel
                                 </NavLink>
                             </div>
                         </div>
@@ -81,7 +81,7 @@ const showingNavigationDropdown = ref(false);
                                             method="post"
                                             as="button"
                                         >
-                                            Log Out
+                                            Sair
                                         </DropdownLink>
                                     </template>
                                 </Dropdown>
