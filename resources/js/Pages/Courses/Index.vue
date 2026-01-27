@@ -32,10 +32,11 @@ defineProps({
                     </div>
 
                     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div v-for="course in courses" :key="course.id" class="border p-4 rounded-lg hover:shadow-lg transition">
+                        <Link :href="route('courses.show', course.id)" class="block border p-4 rounded-lg hover:shadow-lg transition bg-white cursor-pointer">
                             <h3 class="font-bold text-lg text-indigo-600">{{ course.title }}</h3>
                             <p class="text-gray-600 mt-2">{{ course.description }}</p>
-                        </div>
+                            <span class="text-xs text-gray-400 mt-4 block">Clique para gerenciar aulas →</span>
+                        </Link>
                     </div>
 
                 </div>

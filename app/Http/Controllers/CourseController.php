@@ -50,9 +50,16 @@ class CourseController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Course $course)
     {
-        //
+        // Carrega o curso JUNTAMENTE com as aulas (ordenadas)
+        $course->load(['lessons' => function ($query) {
+            $query->orderBy('position', 'asc');
+        }]);
+
+        return Inertia::render('Courses/Show', [
+            'course' => $course
+        ]);
     }
 
     /**
