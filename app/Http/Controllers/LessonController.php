@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
-//use Inertia\Inertia; //<<<--- descomentar se for preciso.
+use Inertia\Inertia; //<<<--- descomentar se for preciso.
 
 class LessonController extends Controller
 {
