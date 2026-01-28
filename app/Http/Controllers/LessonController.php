@@ -30,17 +30,48 @@ class LessonController extends Controller
         }
     }
 
+    // Método para Marcar/Desmarcar aula
+    public function toggleComplete(Lesson $lesson)
+    {
+        // Se já completou, remove. Se não, adiciona. (Toggle)
+        auth()->user()->completedLessons()->toggle($lesson->id);
+        
+        return back(); // Recarrega a página
+    }
+
     public function show(Course $course, Lesson $lesson)
     {
-        // Garante que carregamos TODAS as aulas do curso (para o menu lateral)
-        // ordenadas pela posição
+        // 1. Carrega todas as aulas do curso (para o menu e navegação)
+        // E já verifica quais o usuário logado completou!
         $course->load(['lessons' => function ($query) {
-            $query->orderBy('position', 'asc');
+            $query->orderBy('position', 'asc')
+                  ->withExists(['users as is_completed' => function ($q) {
+                      $q->where('user_id', auth()->id());
+                  }]);
         }]);
+
+        // 2. Lógica do Anterior / Próximo
+        // Pega a lista de aulas ordenadas
+        $lessons = $course->lessons;
+        
+        // Encontra o índice da aula atual na lista (0, 1, 2...)
+        $currentIndex = $lessons->search(function($item) use ($lesson) {
+            return $item->id === $lesson->id;
+        });
+
+        // Define quem é quem
+        $prevLesson = $currentIndex > 0 ? $lessons[$currentIndex - 1] : null;
+        $nextLesson = $currentIndex < ($lessons->count() - 1) ? $lessons[$currentIndex + 1] : null;
+
+        // 3. Verifica se a aula ATUAL está completa
+        $isCompleted = auth()->user()->completedLessons()->where('lesson_id', $lesson->id)->exists();
 
         return Inertia::render('Lessons/Watch', [
             'course' => $course,
             'currentLesson' => $lesson,
+            'isCompleted' => $isCompleted, // Enviamos para o Vue
+            'prevLesson' => $prevLesson,   // Botão Anterior
+            'nextLesson' => $nextLesson    // Botão Próximo
         ]);
     }
 }

@@ -35,6 +35,10 @@ Route::middleware('auth')->group(function () {
     // Rota para assistir a aula (GET)
     Route::get('/courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])
     ->name('lessons.show');
+
+    // Rota para marcar como concluída (POST)
+    Route::post('/lessons/{lesson}/complete', [LessonController::class, 'toggleComplete'])
+    ->name('lessons.complete');
 });
 
 require __DIR__.'/auth.php';
