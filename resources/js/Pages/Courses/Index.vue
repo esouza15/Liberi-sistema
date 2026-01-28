@@ -67,21 +67,38 @@ defineProps({
                                 {{ course.progress_percent === 0 ? 'Começar Curso →' : 'Continuar Assistindo →' }}
                             </span>
 
-                            <span class="text-xs text-gray-400 mt-4 flex justify-between">
+                            <span class="text-xs text-gray-400 mt-4 flex justify-between"></span>
                                 
-                            <span>
+                                <span>
+                                    {{ course.progress_percent === 0 ? 'Começar Curso →' : (course.progress_percent === 100 ? 'Revisar Curso ↺' : 'Continuar Assistindo →') }}
+                                </span>
+                                
+                                <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-lg text-indigo-600">{{ course.title }}</h3>
+                                <span v-if="course.progress_percent === 100" class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
+                                    Concluído
+                                </span>
+                            </div>
+
+                            <p class="text-gray-600 mt-2 text-sm">{{ course.description || 'Sem descrição' }}</p>
+                            
+                            <div class="mt-4">
+                                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>Progresso</span>
+                                    <span>{{ course.progress_percent }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div 
+                                        class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" 
+                                        :style="{ width: course.progress_percent + '%' }"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <span class="text-xs text-gray-400 mt-4 block">
                                 {{ course.progress_percent === 0 ? 'Começar Curso →' : (course.progress_percent === 100 ? 'Revisar Curso ↺' : 'Continuar Assistindo →') }}
                             </span>
-                            
-                            <a 
-                                v-if="$page.props.auth.user.is_admin" 
-                                :href="route('courses.show', course.id)" 
-                                class="text-indigo-400 hover:text-indigo-600 z-10 hover:underline"
-                                @click.stop 
-                            >
-                                ⚙ Gerenciar
-                            </a>
-                        </span>
+                        
                         </Link>
 
                     </div>
