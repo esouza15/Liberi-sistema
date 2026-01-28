@@ -17,7 +17,7 @@ defineProps({
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Cursos Disponíveis
                 </h2>
-                <Link :href="route('courses.create')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
+                <Link v-if="$page.props.auth.user.is_admin" :href="route('courses.create')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
                     + Novo Curso
                 </Link>
             </div>

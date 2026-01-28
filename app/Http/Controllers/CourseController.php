@@ -25,13 +25,23 @@ class CourseController extends Controller
 
 // Mostra a tela de criar curso
     public function create()
-    {
+    {   
+        // bloquear acesso não autorizado
+        if (! auth()->user()->is_admin) {
+            abort(403, 'Acesso não autorizado');
+        }
+
         return Inertia::render('Courses/Create');
     }
 
     // Recebe os dados do formulário e salva no banco
     public function store(Request $request)
     {
+        // 0. bloquear acesso não autorizado
+        if (! auth()->user()->is_admin) {
+            abort(403, 'Acesso não autorizado');
+        }
+
         // 1. Validação (Segurança)
         $validated = $request->validate([
             'title' => 'required|string|max:255',
