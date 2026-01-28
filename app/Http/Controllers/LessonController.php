@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
-use Inertia\Inertia; //<<<--- descomentar se for preciso.
+use Inertia\Inertia;
 
 class LessonController extends Controller
 {
@@ -41,7 +41,17 @@ class LessonController extends Controller
 
     public function show(Course $course, Lesson $lesson)
     {
-        // 1. Carrega todas as aulas do curso (para o menu e navegação)
+        // 1. O Porteiro: Verifica se o usuário tem matrícula
+        // Se NÃO for Admin E NÃO estiver matriculado -> Bloqueia
+        $isEnrolled = auth()->user()->enrolledCourses()->where('course_id', $course->id)->exists();
+        
+        if (!auth()->user()->is_admin && !$isEnrolled) {
+            // Redireciona para a página de vendas ou dá erro
+            return redirect()->route('courses.index')->with('error', 'Você precisa se matricular para assistir.');
+            // Por enquanto volta para a Index, mas depois vai para o Checkout
+        }
+
+        // 2. Carrega todas as aulas do curso (para o menu e navegação)
         // E já verifica quais o usuário logado completou!
         $course->load(['lessons' => function ($query) {
             $query->orderBy('position', 'asc')
@@ -50,7 +60,7 @@ class LessonController extends Controller
                   }]);
         }]);
 
-        // 2. Lógica do Anterior / Próximo
+        // 3. Lógica do Anterior / Próximo
         // Pega a lista de aulas ordenadas
         $lessons = $course->lessons;
         
@@ -59,11 +69,11 @@ class LessonController extends Controller
             return $item->id === $lesson->id;
         });
 
-        // Define quem é quem
+        // 4. Define quem é quem
         $prevLesson = $currentIndex > 0 ? $lessons[$currentIndex - 1] : null;
         $nextLesson = $currentIndex < ($lessons->count() - 1) ? $lessons[$currentIndex + 1] : null;
 
-        // 3. Verifica se a aula ATUAL está completa
+        // 5. Verifica se a aula ATUAL está completa
         $isCompleted = auth()->user()->completedLessons()->where('lesson_id', $lesson->id)->exists();
 
         return Inertia::render('Lessons/Watch', [

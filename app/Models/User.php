@@ -52,4 +52,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Lesson::class, 'lesson_user')->withTimestamps();
     }
     
+    // Cursos que o aluno comprou/tem acesso
+    public function enrolledCourses()
+    {
+        return $this->belongsToMany(Course::class, 'enrollments')
+                    ->withPivot('enrolled_at');
+    }
+
 }

@@ -14,7 +14,9 @@ class Course extends Model
         'title',
         'description',
         'video_url',
-        'is_published'
+        'is_published',
+        'price',
+        'image_url'
     ];
 
     // Um curso tem muitas aulas.
@@ -22,4 +24,11 @@ class Course extends Model
     {
         return $this->hasMany(Lesson::class)->orderBy('position');
     }
+
+    // Alunos matriculados neste curso
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'enrollments');
+    }
+    
 }
