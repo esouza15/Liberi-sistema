@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Inertia\Inertia; //<<<--- descomentar se for preciso.
 
