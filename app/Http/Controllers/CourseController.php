@@ -58,6 +58,44 @@ class CourseController extends Controller
         ]);
     }
 
+public function dashboard()
+    {
+        // Reaproveitando a lógica inteligente de progresso
+        $courses = Course::with('lessons')
+                        ->withCount('lessons')
+                        ->get();
+
+        $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
+
+        foreach ($courses as $course) {
+            $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
+            
+            // Calcula porcentagem
+            if ($course->lessons_count > 0) {
+                $course->progress_percent = round(($course->completed_lessons_count / $course->lessons_count) * 100);
+            } else {
+                $course->progress_percent = 0;
+            }
+
+            // Define destino (Vídeo ou Capa)
+            $nextLesson = $course->lessons
+                ->whereNotIn('id', $userCompletedIds)
+                ->sortBy('position')
+                ->first();
+
+            if ($nextLesson) {
+                $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
+            } else {
+                $course->target_route = route('courses.show', $course->id);
+            }
+        }
+
+        // Renderiza a Dashboard enviando os cursos
+        return Inertia::render('Dashboard', [
+            'courses' => $courses
+        ]);
+    }
+
 // Mostra a tela de criar curso
     public function create()
     {   
