@@ -13,15 +13,30 @@ class CourseController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-{
-    // 1. Busca todos os cursos no banco
-    $courses = Course::all();
+    {
+        // Busca os cursos e conta quantas aulas cada um tem
+        $courses = Course::withCount('lessons')->get();
 
-    // 2. Manda para a tela 'Courses/Index' enviando a lista junto
-    return Inertia::render('Courses/Index', [
-        'courses' => $courses
-    ]);
-}
+        // Agora, para cada curso, vamos contar quantas o aluno já fez
+        // (Usando a relação 'completedLessons' do Usuário que criamos antes)
+        $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
+
+        // Adiciona a contagem de concluídas em cada curso
+        foreach ($courses as $course) {
+            $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
+            
+            // Calcula a porcentagem já aqui para facilitar (0 a 100)
+            if ($course->lessons_count > 0) {
+                $course->progress_percent = round(($course->completed_lessons_count / $course->lessons_count) * 100);
+            } else {
+                $course->progress_percent = 0;
+            }
+        }
+
+        return Inertia::render('Courses/Index', [
+            'courses' => $courses
+        ]);
+    }
 
 // Mostra a tela de criar curso
     public function create()

@@ -39,9 +39,31 @@ defineProps({
                             :href="route('courses.show', course.id)" 
                             class="block border p-4 rounded-lg hover:shadow-lg transition bg-white cursor-pointer"
                         >
-                            <h3 class="font-bold text-lg text-indigo-600">{{ course.title }}</h3>
-                            <p class="text-gray-600 mt-2">{{ course.description }}</p>
-                            <span class="text-xs text-gray-400 mt-4 block">Clique para gerenciar aulas →</span>
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-lg text-indigo-600">{{ course.title }}</h3>
+                                <span v-if="course.progress_percent === 100" class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
+                                    Concluído
+                                </span>
+                            </div>
+
+                            <p class="text-gray-600 mt-2 text-sm">{{ course.description || 'Sem descrição' }}</p>
+                            
+                            <div class="mt-4">
+                                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                    <span>Progresso</span>
+                                    <span>{{ course.progress_percent }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div 
+                                        class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" 
+                                        :style="{ width: course.progress_percent + '%' }"
+                                    ></div>
+                                </div>
+                            </div>
+
+                            <span class="text-xs text-gray-400 mt-4 block">
+                                {{ course.progress_percent === 0 ? 'Começar Curso →' : 'Continuar Assistindo →' }}
+                            </span>
                         </Link>
 
                     </div>
