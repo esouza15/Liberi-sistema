@@ -34,10 +34,12 @@ defineProps({
                     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         
                         <Link 
+                            <Link
                             v-for="course in courses" 
                             :key="course.id" 
-                            :href="route('courses.show', course.id)" 
+                            :href="course.target_route" 
                             class="block border p-4 rounded-lg hover:shadow-lg transition bg-white cursor-pointer"
+                        >
                         >
                             <div class="flex justify-between items-start">
                                 <h3 class="font-bold text-lg text-indigo-600">{{ course.title }}</h3>
@@ -64,6 +66,22 @@ defineProps({
                             <span class="text-xs text-gray-400 mt-4 block">
                                 {{ course.progress_percent === 0 ? 'Começar Curso →' : 'Continuar Assistindo →' }}
                             </span>
+
+                            <span class="text-xs text-gray-400 mt-4 flex justify-between">
+                                
+                            <span>
+                                {{ course.progress_percent === 0 ? 'Começar Curso →' : (course.progress_percent === 100 ? 'Revisar Curso ↺' : 'Continuar Assistindo →') }}
+                            </span>
+                            
+                            <a 
+                                v-if="$page.props.auth.user.is_admin" 
+                                :href="route('courses.show', course.id)" 
+                                class="text-indigo-400 hover:text-indigo-600 z-10 hover:underline"
+                                @click.stop 
+                            >
+                                ⚙ Gerenciar
+                            </a>
+                        </span>
                         </Link>
 
                     </div>

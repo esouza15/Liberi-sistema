@@ -14,22 +14,42 @@ class CourseController extends Controller
      */
     public function index()
     {
-        // Busca os cursos e conta quantas aulas cada um tem
-        $courses = Course::withCount('lessons')->get();
+        // 1. Carregamos os cursos COM as aulas (para saber a ordem) e a contagem
+        $courses = Course::with('lessons') // <--- Carregamos as aulas aqui
+                        ->withCount('lessons')
+                        ->get();
 
-        // Agora, para cada curso, vamos contar quantas o aluno já fez
-        // (Usando a relação 'completedLessons' do Usuário que criamos antes)
+        // 2. Pegamos os IDs das aulas que o usuário JÁ fez
         $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
 
-        // Adiciona a contagem de concluídas em cada curso
         foreach ($courses as $course) {
+            // Contagem de progresso (igual antes)
             $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
             
-            // Calcula a porcentagem já aqui para facilitar (0 a 100)
             if ($course->lessons_count > 0) {
                 $course->progress_percent = round(($course->completed_lessons_count / $course->lessons_count) * 100);
             } else {
                 $course->progress_percent = 0;
+            }
+
+            // --- A MÁGICA DO "CONTINUAR" COMEÇA AQUI ---
+            
+            // Procura a primeira aula que NÃO está na lista de concluídas
+            $nextLesson = $course->lessons
+                ->whereNotIn('id', $userCompletedIds)
+                ->sortBy('position')
+                ->first();
+
+            // Lógica de Destino:
+            if ($nextLesson) {
+                // Se tem aula pendente, o link vai direto para o Player da aula
+                $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
+            } elseif ($course->lessons->count() > 0) {
+                // Se já acabou tudo, manda para a primeira aula (para revisar) ou para a grade
+                $course->target_route = route('courses.show', $course->id);
+            } else {
+                // Se o curso não tem aulas, manda para a grade (para o admin cadastrar)
+                $course->target_route = route('courses.show', $course->id);
             }
         }
 
