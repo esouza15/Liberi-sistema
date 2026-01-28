@@ -40,4 +40,10 @@ class Lesson extends Model
     {
         return $this->belongsTo(Course::class);
     }
+
+    // Relação inversa: Quem são os usuários que completaram esta aula?
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'lesson_user')->withTimestamps();
+    }
 }
