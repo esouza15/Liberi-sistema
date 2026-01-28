@@ -31,6 +31,10 @@ Route::middleware('auth')->group(function () {
     // Rota para Adicionar Aula (Repare que é POST e usa {course})
     Route::post('/courses/{course}/lessons', [LessonController::class, 'store'])
     ->name('courses.lessons.store');
+
+    // Rota para assistir a aula (GET)
+    Route::get('/courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])
+    ->name('lessons.show');
 });
 
 require __DIR__.'/auth.php';

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use Illuminate\Http\Request;
+//use Inertia\Inertia; //<<<--- descomentar se for preciso.
 
 class LessonController extends Controller
 {
@@ -26,5 +27,19 @@ class LessonController extends Controller
         if (! auth()->user()->is_admin) {
             abort(403, 'Acesso negado.');
         }
+    }
+
+    public function show(Course $course, Lesson $lesson)
+    {
+        // Garante que carregamos TODAS as aulas do curso (para o menu lateral)
+        // ordenadas pela posição
+        $course->load(['lessons' => function ($query) {
+            $query->orderBy('position', 'asc');
+        }]);
+
+        return Inertia::render('Lessons/Watch', [
+            'course' => $course,
+            'currentLesson' => $lesson,
+        ]);
     }
 }

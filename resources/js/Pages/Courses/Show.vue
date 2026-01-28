@@ -58,9 +58,9 @@ const submit = () => {
                                 </span>
                                 <span class="text-gray-700">{{ lesson.title }}</span>
                             </div>
-                            <a :href="lesson.video_url" target="_blank" class="text-indigo-600 hover:text-indigo-900 text-sm">
-                                Ver Vídeo ↗
-                            </a>
+                            <Link :href="route('lessons.show', [course.id, lesson.id])" class="text-indigo-600 hover:text-indigo-900 text-sm font-bold">
+                            Assistir Agora ▶
+                            </Link>
                         </li>
                     </ul>
                 </div>
