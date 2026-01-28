@@ -41,4 +41,5 @@ Route::middleware('auth')->group(function () {
     ->name('lessons.complete');
 });
 
+
 require __DIR__.'/auth.php';

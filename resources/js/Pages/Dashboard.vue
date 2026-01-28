@@ -5,6 +5,7 @@ import { Head, Link } from '@inertiajs/vue3';
 defineProps({
     courses: Array
 });
+
 </script>
 
 <template>

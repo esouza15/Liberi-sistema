@@ -58,6 +58,7 @@ class CourseController extends Controller
         ]);
     }
 
+    
 public function dashboard()
     {
         // Reaproveitando a lógica inteligente de progresso
