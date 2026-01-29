@@ -1,16 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import GuestLayout from '@/Layouts/GuestLayout.vue'; // <--- Importamos o novo Layout
 import { Head, Link } from '@inertiajs/vue3';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import { ref } from 'vue';
 
 defineProps({
     courses: Array,
     isLoggedIn: Boolean
 });
-
-// Estado para controlar o menu hambúrguer de visitantes
-const showingGuestNavigation = ref(false);
 
 const formatPrice = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -20,98 +16,20 @@ const formatPrice = (value) => {
 <template>
     <Head title="Catálogo de Cursos" />
 
-    <component :is="isLoggedIn ? AuthenticatedLayout : 'div'">
+    <component :is="isLoggedIn ? AuthenticatedLayout : GuestLayout">
         
-        <header v-if="!isLoggedIn" class="bg-white shadow-sm relative z-10 mb-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    
-                    <div class="flex">
-                        <div class="shrink-0 flex items-center">
-                            <Link href="/">
-                                <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
-                            </Link>
-                        </div>
-                    </div>
-
-                    <div class="hidden sm:flex sm:items-center sm:ml-6 space-x-4">
-                        <Link :href="route('login')" class="text-gray-600 hover:text-gray-900 font-medium transition">
-                            Entrar
-                        </Link>
-                        <Link :href="route('register')" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
-                            Criar Conta
-                        </Link>
-                    </div>
-
-                    <div class="-mr-2 flex items-center sm:hidden">
-                        <button
-                            @click="showingGuestNavigation = !showingGuestNavigation"
-                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out"
-                        >
-                            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                                <path
-                                    :class="{
-                                        hidden: showingGuestNavigation,
-                                        'inline-flex': !showingGuestNavigation,
-                                    }"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16"
-                                />
-                                <path
-                                    :class="{
-                                        hidden: !showingGuestNavigation,
-                                        'inline-flex': showingGuestNavigation,
-                                    }"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div
-                :class="{ block: showingGuestNavigation, hidden: !showingGuestNavigation }"
-                class="sm:hidden border-t border-gray-200"
-            >
-                <div class="pt-2 pb-3 space-y-1">
-                    <Link
-                        :href="route('login')"
-                        class="block w-full pl-3 pr-4 py-2 border-l-4 border-transparent text-left text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition duration-150 ease-in-out"
-                    >
-                        Entrar
-                    </Link>
-                    <Link
-                        :href="route('register')"
-                        class="block w-full pl-3 pr-4 py-2 border-l-4 border-transparent text-left text-base font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 hover:border-indigo-300 transition duration-150 ease-in-out"
-                    >
-                        Criar Conta
-                    </Link>
-                </div>
-            </div>
-        </header>
-
         <template v-if="isLoggedIn" #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Catálogo de Cursos
                 </h2>
-                <Link 
-                    v-if="$page.props.auth.user && $page.props.auth.user.is_admin" 
-                    :href="route('courses.create')" 
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm"
-                >
+                <Link v-if="$page.props.auth.user && $page.props.auth.user.is_admin" :href="route('courses.create')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm">
                     + Novo Curso
                 </Link>
             </div>
         </template>
 
-        <div class="py-12 bg-gray-50 min-h-screen">
+        <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 
                 <div v-if="!isLoggedIn" class="text-center mb-10 px-4">
@@ -124,21 +42,10 @@ const formatPrice = (value) => {
                 </div>
 
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-0">
-                    <div 
-                        v-for="course in courses" 
-                        :key="course.id" 
-                        class="flex flex-col border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition bg-white h-full"
-                    >
+                    <div v-for="course in courses" :key="course.id" class="flex flex-col border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition bg-white h-full">
                         <div class="h-48 bg-gray-200 w-full relative">
-                            <img 
-                                v-if="course.image_url" 
-                                :src="course.image_url" 
-                                class="w-full h-full object-cover" 
-                                alt="Capa do curso"
-                            />
-                            <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-                                <span class="text-4xl">📚</span>
-                            </div>
+                            <img v-if="course.image_url" :src="course.image_url" class="w-full h-full object-cover" alt="Capa">
+                            <div v-else class="w-full h-full flex items-center justify-center text-gray-400"><span class="text-4xl">📚</span></div>
                             <div class="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-sm font-bold text-gray-800">
                                 {{ parseFloat(course.price) === 0 ? 'GRÁTIS' : formatPrice(course.price) }}
                             </div>
@@ -149,17 +56,13 @@ const formatPrice = (value) => {
                                 <h3 class="font-bold text-lg text-gray-800 mb-1">{{ course.title }}</h3>
                                 <p class="text-gray-600 text-sm line-clamp-3 mb-4">{{ course.description }}</p>
                             </div>
-
                             <div class="mt-2">
                                 <div v-if="isLoggedIn && (course.is_enrolled || $page.props.auth.user.is_admin)">
                                     <div class="mb-3">
                                         <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                            <span>Seu Progresso</span>
-                                            <span>{{ course.progress_percent }}%</span>
+                                            <span>Seu Progresso</span><span>{{ course.progress_percent }}%</span>
                                         </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                            <div class="bg-green-500 h-2 rounded-full" :style="{ width: course.progress_percent + '%' }"></div>
-                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2"><div class="bg-green-500 h-2 rounded-full" :style="{ width: course.progress_percent + '%' }"></div></div>
                                     </div>
                                     <Link :href="course.target_route" class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition">
                                         {{ $page.props.auth.user.is_admin ? 'Gerenciar Curso ⚙️' : (course.progress_percent === 0 ? 'Começar Aula' : 'Continuar') }}
