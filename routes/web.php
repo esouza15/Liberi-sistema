@@ -69,9 +69,8 @@ Route::get('/limpar-tudo-123', function () {
 });
 */
 
+/*
 //Exibir erros de conexão com API ASAAS
-
-
 Route::get('/diagnostico-asaas', function () {
     echo "<h1>Diagnóstico de Integração Asaas</h1>";
     echo "<hr>";
@@ -120,6 +119,13 @@ Route::get('/diagnostico-asaas', function () {
     } else {
         echo "Arquivo de log não encontrado.";
     }
+});
+*/
+
+//apagar depois
+Route::get('/resetar-pedidos', function () {
+    \App\Models\Order::truncate(); // APAGA TODOS OS PEDIDOS DO BANCO
+    return 'Pedidos apagados! Agora você pode tentar comprar novamente como se fosse a primeira vez.';
 });
 
 
