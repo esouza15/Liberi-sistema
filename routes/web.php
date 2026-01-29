@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LessonController;
@@ -43,6 +44,12 @@ Route::middleware('auth')->group(function () {
     // Rota para marcar como concluída (POST)
     Route::post('/lessons/{lesson}/complete', [LessonController::class, 'toggleComplete'])
     ->name('lessons.complete');
+    
+    // Iniciar Compra (Cria o pedido)
+    Route::post('/course/{course}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    
+    // Ver Tela de Pagamento
+    Route::get('/checkout/{order}', [CheckoutController::class, 'show'])->name('checkout.show');
 
 
 });

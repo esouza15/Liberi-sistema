@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,
@@ -17,6 +17,13 @@ const getYoutubeEmbed = (url) => {
     if (!url) return null;
     const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
     return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+}
+
+const form = useForm({});
+
+const buyCourse = () => {
+    // Envia para a rota de checkout que cria o pedido
+    form.post(route('checkout.store', props.course.id));
 }
 </script>
 
@@ -109,14 +116,25 @@ const getYoutubeEmbed = (url) => {
                                 </div>
 
                                 <div v-else>
-                                    <Link 
-                                        :href="isLoggedIn ? '#' : route('register')" 
+                                    <button 
+                                        v-if="isLoggedIn"
+                                        @click="buyCourse"
+                                        :disabled="form.processing"
                                         class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg text-lg shadow-lg transition transform hover:-translate-y-1"
                                     >
-                                        {{ isLoggedIn ? 'Comprar Agora (Em breve)' : 'Criar Conta para Comprar' }}
+                                        {{ form.processing ? 'Processando...' : 'Comprar Agora (Pix)' }}
+                                    </button>
+
+                                    <Link 
+                                        v-else
+                                        :href="route('login')" 
+                                        class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg text-lg shadow-lg transition transform hover:-translate-y-1"
+                                    >
+                                        Fazer Login para Comprar
                                     </Link>
+
                                     <p class="text-xs text-center text-gray-400 mt-2">
-                                        Garantia de 7 dias • Certificado incluso
+                                        Acesso imediato após confirmação
                                     </p>
                                 </div>
                             </div>
