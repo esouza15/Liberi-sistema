@@ -31,11 +31,7 @@ const hasStartedAnyCourse = computed(() => {
                     </p>
                 </div>
 
-                <div v-if="courses.length === 0" class="text-center text-gray-500">
-                    Você ainda não tem cursos. Visite o <Link :href="route('courses.index')" class="text-indigo-600 underline">Catálogo</Link>.
-                </div>
-
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div 
                         v-for="course in props.courses" 
                         :key="course.id" 
