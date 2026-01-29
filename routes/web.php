@@ -39,6 +39,28 @@ Route::middleware('auth')->group(function () {
     // Rota para marcar como concluída (POST)
     Route::post('/lessons/{lesson}/complete', [LessonController::class, 'toggleComplete'])
     ->name('lessons.complete');
+
+
+});
+
+// Rota temporária para corrigir o link de imagens
+Route::get('/arrumar-imagens', function () {
+    $targetFolder = storage_path('app/public');
+    $linkFolder = public_path('storage');
+
+    // 1. Tenta limpar o link antigo se existir (e estiver quebrado)
+    if (file_exists($linkFolder)) {
+        unlink($linkFolder); 
+        echo "Link antigo removido... <br>";
+    }
+
+    // 2. Cria o novo link
+    try {
+        symlink($targetFolder, $linkFolder);
+        return 'Sucesso! O atalho de imagens foi recriado. <br>Target: ' . $targetFolder . '<br>Link: ' . $linkFolder;
+    } catch (\Exception $e) {
+        return 'Erro: ' . $e->getMessage();
+    }
 });
 
 
