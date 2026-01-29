@@ -69,7 +69,7 @@ Route::get('/limpar-tudo-123', function () {
 });
 */
 
-
+/*
 //Exibir erros de conexão com API ASAAS
 Route::get('/diagnostico-asaas', function () {
     echo "<h1>Diagnóstico de Integração Asaas</h1>";
@@ -120,6 +120,7 @@ Route::get('/diagnostico-asaas', function () {
         echo "Arquivo de log não encontrado.";
     }
 });
+*/
 
 
 /*
