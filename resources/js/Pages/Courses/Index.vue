@@ -87,10 +87,12 @@ const formatPrice = (value) => {
                                 </div>
 
                                 <div v-else>
-                                    <button class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded transition opacity-50 cursor-not-allowed" title="Em breve">
-                                        Matricular-se (R$ {{ course.price }})
-                                    </button>
-                                    <p class="text-xs text-center text-gray-400 mt-2">Compra indisponível temporariamente</p>
+                                    <Link 
+                                        :href="route('courses.public', course.id)"
+                                        class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded transition"
+                                    >
+                                        Saiba Mais / Matricular
+                                    </Link>
                                 </div>
 
                             </div>

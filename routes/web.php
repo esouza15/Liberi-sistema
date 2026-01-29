@@ -47,6 +47,10 @@ Route::middleware('auth')->group(function () {
 
 });
 
+// Rota da Página de Vendas (PÚBLICA)
+Route::get('/curso/{course}', [CourseController::class, 'showPublic'])->name('courses.public');
+
+
 /*
 // Rota temporária para corrigir o link de imagens
 Route::get('/arrumar-imagens', function () {

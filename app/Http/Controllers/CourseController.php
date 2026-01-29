@@ -184,4 +184,32 @@ class CourseController extends Controller
     {
         // Implementar futuramente se desejar deletar cursos
     }
+
+    /**
+     * PÁGINA DE VENDAS (PÚBLICA)
+     */
+    public function showPublic(Course $course)
+    {
+        // Carrega as aulas (apenas títulos e ordem) para mostrar na grade curricular
+        $course->load(['lessons' => function ($query) {
+            $query->orderBy('position', 'asc');
+        }]);
+
+        // Garante que a imagem tenha o caminho correto
+        if ($course->image_url && !str_starts_with($course->image_url, '/storage')) {
+             $course->image_url = '/storage/' . $course->image_url;
+        }
+
+        // Verifica se o usuário atual (se estiver logado) já tem o curso
+        $userHasCourse = false;
+        if (auth()->check()) {
+            $userHasCourse = auth()->user()->enrolledCourses()->where('course_id', $course->id)->exists();
+        }
+
+        return Inertia::render('Courses/PublicShow', [
+            'course' => $course,
+            'userHasCourse' => $userHasCourse,
+            'isLoggedIn' => auth()->check()
+        ]);
+    }
 }
