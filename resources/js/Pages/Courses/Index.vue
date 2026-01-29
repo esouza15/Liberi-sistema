@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+// 1. IMPORTANDO O LOGO
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 
 defineProps({
@@ -8,11 +9,9 @@ defineProps({
     isLoggedIn: Boolean
 });
 
-// Formatação de preço
 const formatPrice = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
-
 </script>
 
 <template>
@@ -22,9 +21,11 @@ const formatPrice = (value) => {
         
         <header v-if="!isLoggedIn" class="bg-white shadow-sm sticky top-0 z-10 mb-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-                    <Link href="/">
-                        <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
-                    </Link>
+                
+                <Link href="/">
+                    <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
+                </Link>
+
                 <nav class="space-x-4">
                     <Link :href="route('login')" class="text-gray-600 hover:text-gray-900 font-medium">Entrar</Link>
                     <Link :href="route('register')" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Criar Conta</Link>
@@ -61,7 +62,6 @@ const formatPrice = (value) => {
                 </div>
 
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-0">
-                    
                     <div 
                         v-for="course in courses" 
                         :key="course.id" 
@@ -77,7 +77,6 @@ const formatPrice = (value) => {
                             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                                 <span class="text-4xl">📚</span>
                             </div>
-
                             <div class="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-sm font-bold text-gray-800">
                                 {{ parseFloat(course.price) === 0 ? 'GRÁTIS' : formatPrice(course.price) }}
                             </div>
@@ -90,7 +89,6 @@ const formatPrice = (value) => {
                             </div>
 
                             <div class="mt-2">
-                                
                                 <div v-if="isLoggedIn && (course.is_enrolled || $page.props.auth.user.is_admin)">
                                     <div class="mb-3">
                                         <div class="flex justify-between text-xs text-gray-500 mb-1">
@@ -101,25 +99,18 @@ const formatPrice = (value) => {
                                             <div class="bg-green-500 h-2 rounded-full" :style="{ width: course.progress_percent + '%' }"></div>
                                         </div>
                                     </div>
-
                                     <Link :href="course.target_route" class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition">
                                         {{ $page.props.auth.user.is_admin ? 'Gerenciar Curso ⚙️' : (course.progress_percent === 0 ? 'Começar Aula' : 'Continuar') }}
                                     </Link>
                                 </div>
-
                                 <div v-else>
-                                    <Link 
-                                        :href="route('courses.public', course.id)"
-                                        class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded transition"
-                                    >
+                                    <Link :href="route('courses.public', course.id)" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded transition">
                                         Saiba Mais / Matricular
                                     </Link>
                                 </div>
-
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
