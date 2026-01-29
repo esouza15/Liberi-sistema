@@ -36,6 +36,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])
     ->name('lessons.show');
 
+    // Rota para editar 'lessons.show'
+    Route::get('/courses/{course}/lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('lessons.edit');
+    Route::put('/courses/{course}/lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
+
     // Rota para marcar como concluída (POST)
     Route::post('/lessons/{lesson}/complete', [LessonController::class, 'toggleComplete'])
     ->name('lessons.complete');
@@ -43,6 +47,7 @@ Route::middleware('auth')->group(function () {
 
 });
 
+/*
 // Rota temporária para corrigir o link de imagens
 Route::get('/arrumar-imagens', function () {
     $targetFolder = storage_path('app/public');
@@ -62,6 +67,7 @@ Route::get('/arrumar-imagens', function () {
         return 'Erro: ' . $e->getMessage();
     }
 });
+*/
 
 
 require __DIR__.'/auth.php';

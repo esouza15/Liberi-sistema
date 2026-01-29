@@ -29,20 +29,22 @@ public function index()
             $course->progress_percent = ($course->lessons_count > 0) 
                 ? round(($course->completed_lessons_count / $course->lessons_count) * 100) 
                 : 0;
-            
-            // Define rota de destino "inteligente"
-            $nextLesson = $course->lessons
-                ->whereNotIn('id', $userCompletedIds)
-                ->sortBy('position')
-                ->first();
 
-            if ($nextLesson) {
+            // Lógica de Destino:
+            // SE FOR ADMIN: Vai sempre para a Tela de Gestão (onde adiciona aulas)
+            if (auth()->user()->is_admin) {
+                $course->target_route = route('courses.show', $course->id);
+            } 
+            // SE FOR ALUNO: Mantém a lógica inteligente de "Continuar Assistindo"
+            elseif ($nextLesson) {
                 $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
+            } elseif ($course->lessons->count() > 0) {
+                $course->target_route = route('courses.show', $course->id);
             } else {
                 $course->target_route = route('courses.show', $course->id);
             }
             
-            // 3. CORREÇÃO DA IMAGEM (O que faltava)
+            // 3. SUBIR DA IMAGEM
             if ($course->image_url) {
                 $course->image_url = '/storage/' . $course->image_url;
             }

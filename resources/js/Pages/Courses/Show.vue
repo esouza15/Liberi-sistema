@@ -58,9 +58,20 @@ const submit = () => {
                                 </span>
                                 <span class="text-gray-700">{{ lesson.title }}</span>
                             </div>
-                            <Link :href="route('lessons.show', [course.id, lesson.id])" class="text-indigo-600 hover:text-indigo-900 text-sm font-bold">
-                            Assistir Agora ▶
-                            </Link>
+
+                            <div class="flex items-center gap-3">
+                                <Link :href="route('lessons.show', [course.id, lesson.id])" class="text-indigo-600 hover:text-indigo-900 text-sm font-bold">
+                                    Assistir Agora ▶
+                                </Link>
+
+                                <Link 
+                                    v-if="$page.props.auth.user.is_admin"
+                                    :href="route('lessons.edit', [course.id, lesson.id])"
+                                    class="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 bg-blue-50 px-2 py-1 rounded"
+                                >
+                                    Editar ✏
+                                </Link>
+                            </div>
                         </li>
                     </ul>
                 </div>

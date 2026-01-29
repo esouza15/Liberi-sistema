@@ -100,4 +100,37 @@ class LessonController extends Controller
             'nextLesson' => $nextLesson    // Botão Próximo
         ]);
     }
+
+    // Formulário de Edição da Aula
+    public function edit(Course $course, Lesson $lesson)
+    {
+        if (! auth()->user()->is_admin) { abort(403); }
+
+        return Inertia::render('Lessons/Edit', [
+            'course' => $course,
+            'lesson' => $lesson
+        ]);
+    }
+
+    // Salvar alterações da Aula
+    public function update(Request $request, Course $course, Lesson $lesson)
+    {
+        if (! auth()->user()->is_admin) { abort(403); }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'video_url' => 'required|url',
+            'position' => 'required|integer'
+        ]);
+
+        // Recalcula o Embed se mudou a URL
+        preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $validated['video_url'], $matches);
+        $videoId = $matches[1] ?? null;
+        $validated['embed_url'] = $videoId ? "https://www.youtube.com/embed/{$videoId}" : null;
+
+        $lesson->update($validated);
+
+        // Volta para a lista de aulas (Gestão)
+        return redirect()->route('courses.show', $course->id)->with('success', 'Aula atualizada!');
+    }
 }
