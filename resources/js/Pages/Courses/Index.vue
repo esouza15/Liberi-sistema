@@ -1,29 +1,41 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 
 defineProps({
-    courses: Array
+    courses: Array,
+    isLoggedIn: Boolean
 });
 
-// Função para formatar preço (R$ 97,00)
+// Formatação de preço
 const formatPrice = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
 </script>
 
 <template>
-    <Head title="Cursos" />
+    <Head title="Catálogo de Cursos" />
 
-    <AuthenticatedLayout>
-        <template #header>
+    <component :is="isLoggedIn ? AuthenticatedLayout : 'div'">
+        
+        <header v-if="!isLoggedIn" class="bg-white shadow-sm sticky top-0 z-10 mb-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
+                <Link href="/" class="font-bold text-2xl text-indigo-600">Liberi Cursos</Link>
+                <nav class="space-x-4">
+                    <Link :href="route('login')" class="text-gray-600 hover:text-gray-900 font-medium">Entrar</Link>
+                    <Link :href="route('register')" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Criar Conta</Link>
+                </nav>
+            </div>
+        </header>
+
+        <template v-if="isLoggedIn" #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Catálogo de Cursos
                 </h2>
                 
                 <Link 
-                    v-if="$page.props.auth.user.is_admin" 
+                    v-if="$page.props.auth.user && $page.props.auth.user.is_admin" 
                     :href="route('courses.create')" 
                     class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded text-sm"
                 >
@@ -32,14 +44,19 @@ const formatPrice = (value) => {
             </div>
         </template>
 
-        <div class="py-12">
+        <div class="py-12 bg-gray-50 min-h-screen">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 
+                <div v-if="!isLoggedIn" class="text-center mb-10">
+                    <h1 class="text-4xl font-extrabold text-gray-900 mb-2">Nossos Cursos</h1>
+                    <p class="text-gray-600">Explore o conhecimento e transforme sua carreira.</p>
+                </div>
+
                 <div v-if="courses.length === 0" class="text-gray-500 text-center">
                     Nenhum curso disponível no momento.
                 </div>
 
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-0">
                     
                     <div 
                         v-for="course in courses" 
@@ -70,7 +87,7 @@ const formatPrice = (value) => {
 
                             <div class="mt-2">
                                 
-                                <div v-if="course.is_enrolled || $page.props.auth.user.is_admin">
+                                <div v-if="isLoggedIn && (course.is_enrolled || $page.props.auth.user.is_admin)">
                                     <div class="mb-3">
                                         <div class="flex justify-between text-xs text-gray-500 mb-1">
                                             <span>Seu Progresso</span>
@@ -102,5 +119,5 @@ const formatPrice = (value) => {
                 </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </component>
 </template>

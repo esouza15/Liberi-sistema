@@ -14,47 +14,74 @@ class CourseController extends Controller
      */
     public function index()
     {
-        // 1. Carrega cursos, aulas, contagem e verificação de matrícula
-        $courses = Course::with('lessons') // Importante carregar lessons para a lógica do nextLesson
-            ->withCount('lessons')
-            ->withExists(['students as is_enrolled' => function ($query) {
-                $query->where('user_id', auth()->id());
-            }])
-            ->get();
+        // 1. Inicia a query básica
+        $query = Course::withCount('lessons');
 
-        $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
+        // 2. Se estiver logado, verifica matrícula
+        if (auth()->check()) {
+            $query->withExists(['students as is_enrolled' => function ($q) {
+                $q->where('user_id', auth()->id());
+            }]);
+        }
+
+        $courses = $query->get();
+        
+        // 3. Prepara dados auxiliares (apenas se logado)
+        $userCompletedIds = [];
+        if (auth()->check()) {
+            $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
+        }
 
         foreach ($courses as $course) {
-            // A. Lógica de Progresso
-            $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
-            
-            $course->progress_percent = ($course->lessons_count > 0) 
-                ? round(($course->completed_lessons_count / $course->lessons_count) * 100) 
-                : 0;
-            
-            // B. Encontra a próxima lição (Definição da variável que estava faltando!)
-            $nextLesson = $course->lessons
-                ->whereNotIn('id', $userCompletedIds)
-                ->sortBy('position')
-                ->first();
+            // Se NÃO estiver logado, define padrões de visitante
+            if (!auth()->check()) {
+                $course->is_enrolled = false;
+                $course->progress_percent = 0;
+                $course->target_route = route('courses.public', $course->id); // Manda pra Landing Page
+            } 
+            else {
+                // Lógica de Aluno Logado (igual tínhamos antes)
+                $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
+                
+                $course->progress_percent = ($course->lessons_count > 0) 
+                    ? round(($course->completed_lessons_count / $course->lessons_count) * 100) 
+                    : 0;
+                
+                // Se não tem o campo is_enrolled vindo do banco (admin as vezes não vem), checamos manual
+                if (!isset($course->is_enrolled)) {
+                     // Fallback simples
+                     $course->is_enrolled = auth()->user()->enrolledCourses()->where('course_id', $course->id)->exists();
+                }
 
-            // C. Define Rota de Destino
-            if (auth()->user()->is_admin) {
-                $course->target_route = route('courses.show', $course->id);
-            } elseif ($nextLesson) {
-                $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
-            } else {
-                $course->target_route = route('courses.show', $course->id);
+                if ($course->is_enrolled || auth()->user()->is_admin) {
+                    // Vai para a aula
+                    $nextLesson = $course->lessons
+                        ->whereNotIn('id', $userCompletedIds)
+                        ->sortBy('position')
+                        ->first();
+                    
+                    if (auth()->user()->is_admin) {
+                        $course->target_route = route('courses.show', $course->id);
+                    } elseif ($nextLesson) {
+                        $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
+                    } else {
+                        $course->target_route = route('courses.show', $course->id);
+                    }
+                } else {
+                    // Logado mas não comprou -> Landing Page
+                    $course->target_route = route('courses.public', $course->id);
+                }
             }
             
-            // D. Correção da Imagem
+            // Correção da imagem
             if ($course->image_url && !str_starts_with($course->image_url, '/storage')) {
                 $course->image_url = '/storage/' . $course->image_url;
             }
         }
 
         return Inertia::render('Courses/Index', [
-            'courses' => $courses
+            'courses' => $courses,
+            'isLoggedIn' => auth()->check() // Informa ao Vue se tem login
         ]);
     }
 

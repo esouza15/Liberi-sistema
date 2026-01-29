@@ -1,84 +1,56 @@
 <?php
 
-use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LessonController;
+use App\Http\Controllers\CheckoutController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+// --- ROTAS PÚBLICAS (Acessíveis a todos) ---
 
-Route::get('/dashboard', [CourseController::class, 'dashboard'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+// 1. A Home agora é o Catálogo
+Route::get('/', [CourseController::class, 'index'])->name('home');
 
-Route::middleware('auth')->group(function () {
+// 2. O Catálogo também responde por /courses
+Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+
+// 3. A Página de Vendas (Landing Page)
+Route::get('/curso/{course}', [CourseController::class, 'showPublic'])->name('courses.public');
+
+// --- ROTAS PROTEGIDAS (Apenas Logados) ---
+Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // Dashboard do Aluno
+    Route::get('/dashboard', [CourseController::class, 'dashboard'])->name('dashboard');
+
+    // Perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // --- GESTÃO DE CURSOS (ADMIN) E AULAS ---
     
-    // Rotas de Curso
-    Route::resource('courses', CourseController::class);
+    // Rotas de criação/edição de cursos (Admin)
+    Route::get('/courses/create', [CourseController::class, 'create'])->name('courses.create');
+    Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
+    Route::get('/courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit');
+    Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+    
+    // Visualização interna do curso (Player/Gestão)
+    Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 
-    // Rota para Adicionar Aula (Repare que é POST e usa {course})
-    Route::post('/courses/{course}/lessons', [LessonController::class, 'store'])
-    ->name('courses.lessons.store');
-
-    // Rota para assistir a aula (GET)
-    Route::get('/courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])
-    ->name('lessons.show');
-
-    // Rota para editar 'lessons.show'
+    // Aulas
+    Route::post('/courses/{course}/lessons', [LessonController::class, 'store'])->name('courses.lessons.store');
+    Route::get('/courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
     Route::get('/courses/{course}/lessons/{lesson}/edit', [LessonController::class, 'edit'])->name('lessons.edit');
     Route::put('/courses/{course}/lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
+    Route::post('/lessons/{lesson}/complete', [LessonController::class, 'toggleComplete'])->name('lessons.complete');
 
-    // Rota para marcar como concluída (POST)
-    Route::post('/lessons/{lesson}/complete', [LessonController::class, 'toggleComplete'])
-    ->name('lessons.complete');
-    
-    // Iniciar Compra (Cria o pedido)
+    // Checkout
     Route::post('/course/{course}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    
-    // Ver Tela de Pagamento
     Route::get('/checkout/{order}', [CheckoutController::class, 'show'])->name('checkout.show');
-
-
 });
-
-// Rota da Página de Vendas (PÚBLICA)
-Route::get('/curso/{course}', [CourseController::class, 'showPublic'])->name('courses.public');
-
-
-/*
-// Rota temporária para corrigir o link de imagens
-Route::get('/arrumar-imagens', function () {
-    $targetFolder = storage_path('app/public');
-    $linkFolder = public_path('storage');
-
-    // 1. Tenta limpar o link antigo se existir (e estiver quebrado)
-    if (file_exists($linkFolder)) {
-        unlink($linkFolder); 
-        echo "Link antigo removido... <br>";
-    }
-
-    // 2. Cria o novo link
-    try {
-        symlink($targetFolder, $linkFolder);
-        return 'Sucesso! O atalho de imagens foi recriado. <br>Target: ' . $targetFolder . '<br>Link: ' . $linkFolder;
-    } catch (\Exception $e) {
-        return 'Erro: ' . $e->getMessage();
-    }
-});
-*/
-
 
 require __DIR__.'/auth.php';
