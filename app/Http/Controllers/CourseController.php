@@ -58,7 +58,7 @@ public function index()
     
 public function dashboard()
     {
-        // Reaproveitando a lógica inteligente de progresso
+        // Carrega cursos e contagem
         $courses = Course::with('lessons')
                         ->withCount('lessons')
                         ->get();
@@ -86,9 +86,13 @@ public function dashboard()
             } else {
                 $course->target_route = route('courses.show', $course->id);
             }
+
+            // --- CORREÇÃO DA IMAGEM NO DASHBOARD ---
+            if ($course->image_url) {
+                $course->image_url = '/storage/' . $course->image_url;
+            }
         }
 
-        // Renderiza a Dashboard enviando os cursos
         return Inertia::render('Dashboard', [
             'courses' => $courses
         ]);
