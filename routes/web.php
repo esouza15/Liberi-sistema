@@ -122,12 +122,12 @@ Route::get('/diagnostico-asaas', function () {
 });
 
 
-/*
+
 //apagar depois
 Route::get('/resetar-pedidos', function () {
     \App\Models\Order::truncate(); // APAGA TODOS OS PEDIDOS DO BANCO
     return 'Pedidos apagados! Agora você pode tentar comprar novamente como se fosse a primeira vez.';
 });
-*/
+
 
 require __DIR__.'/auth.php';
