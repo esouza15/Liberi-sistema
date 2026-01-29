@@ -7,6 +7,11 @@ const props = defineProps({
     courses: Array
 });
 
+// 1. ADICIONAMOS A FUNÇÃO DE FORMATAR PREÇO
+const formatPrice = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
+
 const hasStartedAnyCourse = computed(() => {
     return props.courses.some(course => course.progress_percent > 0);
 });
@@ -51,8 +56,8 @@ const hasStartedAnyCourse = computed(() => {
                                 <span class="text-4xl">📚</span>
                             </div>
                             
-                            <div v-if="!course.is_enrolled" class="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded shadow">
-                                Disponível
+                            <div v-if="!course.is_enrolled" class="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-sm font-bold text-gray-800">
+                                {{ parseFloat(course.price) === 0 ? 'GRÁTIS' : formatPrice(course.price) }}
                             </div>
                         </div>
 
