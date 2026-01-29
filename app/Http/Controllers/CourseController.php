@@ -133,15 +133,17 @@ public function dashboard()
     }
 
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Course $course)
     {
-        // Carrega o curso JUNTAMENTE com as aulas (ordenadas)
+        // Carrega aulas
         $course->load(['lessons' => function ($query) {
             $query->orderBy('position', 'asc');
         }]);
+
+        // Garante que a imagem apareça corretamente na gestão também
+        if ($course->image_url && !str_starts_with($course->image_url, '/storage')) {
+             $course->image_url = '/storage/' . $course->image_url;
+        }
 
         return Inertia::render('Courses/Show', [
             'course' => $course
@@ -167,30 +169,27 @@ public function dashboard()
     public function update(Request $request, Course $course)
     {
         if (! auth()->user()->is_admin) { abort(403); }
-
-        // Nota: Para enviar arquivos via PUT no Laravel/Inertia, às vezes usamos POST com _method: put
-        // Mas vamos simplificar validando o que veio
         
+        // Validação (igual ao anterior)
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric',
-            'image' => 'nullable|image|max:2048', // Opcional na edição
+            'image' => 'nullable|image|max:2048',
             'video_url' => 'nullable|url'
         ]);
 
-        // Se enviou nova imagem, substitui
         if ($request->hasFile('image')) {
-            // (Opcional) Deletar a antiga se quiser: Storage::disk('public')->delete($course->image_url);
             $path = $request->file('image')->store('courses', 'public');
             $validated['image_url'] = $path;
         }
 
-        unset($validated['image']); // Remove o arquivo do array de dados puros
+        unset($validated['image']);
 
         $course->update($validated);
 
-        return redirect()->route('courses.index')->with('success', 'Curso atualizado!');
+        // MUDANÇA AQUI: Volta para a mesma tela (Show) em vez da Index
+        return redirect()->route('courses.show', $course->id)->with('success', 'Curso atualizado!');
     }
 
     /**

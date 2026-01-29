@@ -1,24 +1,55 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
-// Recebe o curso (com as aulas dentro) vindo do Controller
+// Componentes de UI
+import InputLabel from '@/Components/InputLabel.vue';
+import TextInput from '@/Components/TextInput.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import InputError from '@/Components/InputError.vue';
+
 const props = defineProps({
     course: Object
 });
 
-// Formulário para nova aula
-const form = useForm({
-    title: '',
-    video_url: '',
-    position: props.course.lessons.length + 1 // Sugere a próxima posição
+// --- LÓGICA DE EDIÇÃO DO CURSO (TOGGLE) ---
+const isEditingCourse = ref(false); // Controla se mostra o formulário ou o texto
+
+const formCourse = useForm({
+    _method: 'PUT',
+    title: props.course.title,
+    description: props.course.description,
+    price: props.course.price,
+    video_url: props.course.video_url,
+    image: null
 });
 
-const submit = () => {
-    form.post(route('courses.lessons.store', props.course.id), {
-        onSuccess: () => form.reset(), // Limpa o form se der certo
+const submitCourseUpdate = () => {
+    formCourse.post(route('courses.update', props.course.id), {
+        onSuccess: () => {
+            isEditingCourse.value = false; // Fecha o formulário ao salvar
+        }
     });
 };
+
+// --- LÓGICA DE NOVA AULA ---
+const formLesson = useForm({
+    title: '',
+    video_url: '',
+    position: props.course.lessons.length + 1
+});
+
+const submitLesson = () => {
+    formLesson.post(route('courses.lessons.store', props.course.id), {
+        onSuccess: () => formLesson.reset(),
+    });
+};
+
+// Formatação de preço
+const formatPrice = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
 </script>
 
 <template>
@@ -28,10 +59,10 @@ const submit = () => {
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    {{ course.title }}
+                    Gestão do Curso
                 </h2>
                 <Link :href="route('courses.index')" class="text-gray-500 hover:text-gray-700 text-sm">
-                    ← Voltar para Cursos
+                    ← Voltar para Catálogo
                 </Link>
             </div>
         </template>
@@ -39,37 +70,97 @@ const submit = () => {
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 
-                <div class="bg-white p-6 shadow sm:rounded-lg">
-                    <p class="text-gray-600">{{ course.description }}</p>
+                <div class="bg-white p-6 shadow sm:rounded-lg relative">
+                    
+                    <button 
+                        v-if="$page.props.auth.user.is_admin"
+                        @click="isEditingCourse = !isEditingCourse"
+                        class="absolute top-6 right-6 text-sm text-blue-600 hover:text-blue-800 border border-blue-200 bg-blue-50 px-3 py-1 rounded transition"
+                    >
+                        {{ isEditingCourse ? 'Cancelar Edição ✕' : 'Editar Dados do Curso ✏' }}
+                    </button>
+
+                    <div v-if="!isEditingCourse">
+                        <div class="flex gap-6">
+                            <div class="w-1/4">
+                                <img v-if="course.image_url" :src="course.image_url" class="w-full rounded shadow-sm">
+                                <div v-else class="w-full h-32 bg-gray-200 flex items-center justify-center rounded text-gray-400">Sem Capa</div>
+                            </div>
+                            
+                            <div class="w-3/4 pr-20"> <h3 class="text-2xl font-bold text-gray-900">{{ course.title }}</h3>
+                                <p class="text-green-600 font-bold text-lg mb-2">{{ parseFloat(course.price) === 0 ? 'Gratuito' : formatPrice(course.price) }}</p>
+                                <p class="text-gray-600 whitespace-pre-line">{{ course.description }}</p>
+                                
+                                <div v-if="course.video_url" class="mt-4 text-sm text-gray-500">
+                                    🎥 Vídeo de apresentação configurado.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else>
+                        <form @submit.prevent="submitCourseUpdate" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <InputLabel value="Título" />
+                                    <TextInput v-model="formCourse.title" class="w-full" required />
+                                </div>
+                                <div>
+                                    <InputLabel value="Preço (R$)" />
+                                    <TextInput v-model="formCourse.price" type="number" step="0.01" class="w-full" required />
+                                </div>
+                            </div>
+
+                            <div>
+                                <InputLabel value="Descrição" />
+                                <textarea v-model="formCourse.description" class="w-full border-gray-300 rounded shadow-sm" rows="4"></textarea>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <InputLabel value="Vídeo de Vendas (URL)" />
+                                    <TextInput v-model="formCourse.video_url" class="w-full" />
+                                </div>
+                                <div>
+                                    <InputLabel value="Trocar Capa (Opcional)" />
+                                    <input type="file" @input="formCourse.image = $event.target.files[0]" class="block w-full text-sm text-gray-500 mt-1" />
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end pt-4 border-t">
+                                <PrimaryButton :disabled="formCourse.processing">Salvar Alterações do Curso</PrimaryButton>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
                 <div class="bg-white p-6 shadow sm:rounded-lg">
-                    <h3 class="text-lg font-bold mb-4">Grade de Aulas</h3>
+                    <h3 class="text-lg font-bold mb-4 border-b pb-2">Conteúdo / Aulas</h3>
                     
-                    <div v-if="course.lessons.length === 0" class="text-gray-400 italic">
-                        Nenhuma aula cadastrada ainda.
+                    <div v-if="course.lessons.length === 0" class="text-gray-400 italic py-4 text-center">
+                        Nenhuma aula cadastrada ainda. Use o formulário abaixo para começar.
                     </div>
 
                     <ul v-else class="space-y-3">
-                        <li v-for="lesson in course.lessons" :key="lesson.id" class="flex items-center justify-between bg-gray-50 p-3 rounded border">
+                        <li v-for="lesson in course.lessons" :key="lesson.id" class="flex items-center justify-between bg-gray-50 p-3 rounded border hover:bg-gray-100 transition">
                             <div class="flex items-center">
                                 <span class="bg-indigo-100 text-indigo-800 font-bold py-1 px-2 rounded text-xs mr-3">
-                                    Aula {{ lesson.position }}
+                                    #{{ lesson.position }}
                                 </span>
-                                <span class="text-gray-700">{{ lesson.title }}</span>
+                                <span class="text-gray-700 font-medium">{{ lesson.title }}</span>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <Link :href="route('lessons.show', [course.id, lesson.id])" class="text-indigo-600 hover:text-indigo-900 text-sm font-bold">
-                                    Assistir Agora ▶
+                                <Link :href="route('lessons.show', [course.id, lesson.id])" class="text-gray-500 hover:text-indigo-600 text-sm flex items-center gap-1">
+                                    <span>▶</span> Assistir
                                 </Link>
 
                                 <Link 
                                     v-if="$page.props.auth.user.is_admin"
                                     :href="route('lessons.edit', [course.id, lesson.id])"
-                                    class="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 bg-blue-50 px-2 py-1 rounded"
+                                    class="text-xs bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-1 rounded shadow-sm"
                                 >
-                                    Editar ✏
+                                    Editar Aula
                                 </Link>
                             </div>
                         </li>
@@ -77,27 +168,27 @@ const submit = () => {
                 </div>
 
                 <div v-if="$page.props.auth.user.is_admin" class="bg-white p-6 shadow sm:rounded-lg border-l-4 border-indigo-500">
-                    <h3 class="text-lg font-bold mb-4 text-gray-800">Adicionar Nova Aula</h3>
+                    <h3 class="text-lg font-bold mb-4 text-gray-800">+ Adicionar Nova Aula</h3>
                     
-                    <form @submit.prevent="submit" class="flex gap-4 items-end">
-                        <div class="flex-grow">
-                            <label class="block text-gray-700 text-sm font-bold mb-1">Título da Aula</label>
-                            <input v-model="form.title" type="text" class="w-full border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <form @submit.prevent="submitLesson" class="flex gap-4 items-end flex-wrap">
+                        <div class="flex-grow min-w-[200px]">
+                            <InputLabel value="Título da Aula" />
+                            <TextInput v-model="formLesson.title" class="w-full" required placeholder="Ex: Introdução ao Módulo" />
                         </div>
                         
-                        <div class="flex-grow">
-                            <label class="block text-gray-700 text-sm font-bold mb-1">Link do Vídeo</label>
-                            <input v-model="form.video_url" type="text" class="w-full border-gray-300 rounded shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        <div class="flex-grow min-w-[200px]">
+                            <InputLabel value="Link do Vídeo (YouTube)" />
+                            <TextInput v-model="formLesson.video_url" class="w-full" required placeholder="https://youtube.com/..." />
                         </div>
 
                         <div class="w-24">
-                             <label class="block text-gray-700 text-sm font-bold mb-1">Ordem</label>
-                             <input v-model="form.position" type="number" class="w-full border-gray-300 rounded shadow-sm">
+                             <InputLabel value="Ordem" />
+                             <TextInput v-model="formLesson.position" type="number" class="w-full" />
                         </div>
 
-                        <button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700" :disabled="form.processing">
-                            Salvar
-                        </button>
+                        <PrimaryButton :disabled="formLesson.processing">
+                            Salvar Aula
+                        </PrimaryButton>
                     </form>
                 </div>
 
