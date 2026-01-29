@@ -53,4 +53,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/checkout/{order}', [CheckoutController::class, 'show'])->name('checkout.show');
 });
 
+// --- ROTA TEMPORÁRIA DE MANUTENÇÃO (APAGAR DEPOIS) ---
+Route::get('/limpar-tudo-123', function () {
+    // Limpa o cache de configuração (Obrigatório para ler o .env novo)
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    
+    // Limpa o cache da aplicação (Opcional, mas bom garantir)
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+
+    return 'Configuração limpa! O Laravel agora está lendo as chaves novas do .env. <br> Pode apagar esta rota.';
+});
+
 require __DIR__.'/auth.php';
