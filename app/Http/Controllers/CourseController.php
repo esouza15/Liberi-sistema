@@ -68,6 +68,8 @@ class CourseController extends Controller
                         ->get();
 
         $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
+        // 1. Pegamos a lista de IDs dos cursos que o aluno COMPROU
+        $enrolledCourseIds = auth()->user()->enrolledCourses()->pluck('course_id')->toArray();
 
         foreach ($courses as $course) {
             $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
@@ -78,16 +80,26 @@ class CourseController extends Controller
                 $course->progress_percent = 0;
             }
 
-            // Definição do nextLesson
-            $nextLesson = $course->lessons
-                ->whereNotIn('id', $userCompletedIds)
-                ->sortBy('position')
-                ->first();
+            // Verifica se está matriculado
+            $course->is_enrolled = in_array($course->id, $enrolledCourseIds);
 
-            if ($nextLesson) {
-                $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
+            // --- DEFINIÇÃO INTELIGENTE DA ROTA ---
+            if ($course->is_enrolled) {
+                // CENÁRIO A: É ALUNO -> Vai para a próxima aula
+                $nextLesson = $course->lessons
+                    ->whereNotIn('id', $userCompletedIds)
+                    ->sortBy('position')
+                    ->first();
+
+                if ($nextLesson) {
+                    $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
+                } else {
+                    $course->target_route = route('courses.show', $course->id);
+                }
             } else {
-                $course->target_route = route('courses.show', $course->id);
+                // CENÁRIO B: NÃO É ALUNO -> Vai para a Página de Vendas (Landing Page)
+                // Isso elimina o clique intermediário no catálogo!
+                $course->target_route = route('courses.public', $course->id);
             }
 
             // Correção da Imagem

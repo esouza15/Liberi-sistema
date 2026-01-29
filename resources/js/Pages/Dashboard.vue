@@ -7,7 +7,6 @@ const props = defineProps({
     courses: Array
 });
 
-// Verifica se tem progresso
 const hasStartedAnyCourse = computed(() => {
     return props.courses.some(course => course.progress_percent > 0);
 });
@@ -27,12 +26,12 @@ const hasStartedAnyCourse = computed(() => {
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 mb-6">
                     <h3 class="text-lg font-bold text-gray-900">Olá, {{ $page.props.auth.user.name }}! 👋</h3>
                     <p class="text-gray-600">
-                        {{ hasStartedAnyCourse ? 'Continue estudando de onde parou.' : 'Bem-vindo! Que tal começar um curso novo hoje?' }}
+                        {{ hasStartedAnyCourse ? 'Continue estudando de onde parou.' : 'Bem-vindo ao seu painel de estudos.' }}
                     </p>
                 </div>
 
                 <div v-if="courses.length === 0" class="text-center text-gray-500">
-                    Você ainda não tem cursos. Visite o <Link :href="route('courses.index')" class="text-indigo-600 underline">Catálogo</Link>.
+                    Nenhum curso encontrado.
                 </div>
 
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -51,13 +50,17 @@ const hasStartedAnyCourse = computed(() => {
                             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
                                 <span class="text-4xl">📚</span>
                             </div>
+                            
+                            <div v-if="!course.is_enrolled" class="absolute top-2 right-2 bg-indigo-600 text-white text-xs font-bold px-2 py-1 rounded shadow">
+                                Disponível
+                            </div>
                         </div>
 
                         <div class="p-4 flex flex-col flex-grow justify-between">
                             <div>
-                                <h3 class="font-bold text-lg text-indigo-600 mb-2">{{ course.title }}</h3>
+                                <h3 class="font-bold text-lg text-gray-800 mb-2">{{ course.title }}</h3>
                                 
-                                <div class="mb-2">
+                                <div v-if="course.is_enrolled" class="mb-2">
                                     <div class="flex justify-between text-xs text-gray-500 mb-1">
                                         <span>Progresso</span>
                                         <span>{{ course.progress_percent }}%</span>
@@ -69,13 +72,17 @@ const hasStartedAnyCourse = computed(() => {
                                         ></div>
                                     </div>
                                 </div>
+                                <div v-else class="mb-2 text-sm text-gray-500">
+                                    Toque abaixo para ver detalhes e se matricular.
+                                </div>
                             </div>
 
                             <Link 
                                 :href="course.target_route" 
-                                class="mt-4 block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded transition"
+                                class="mt-4 block w-full text-center font-bold py-2 rounded transition text-white"
+                                :class="course.is_enrolled ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700'"
                             >
-                                {{ course.progress_percent === 0 ? 'Iniciar Curso ▶' : 'Continuar Assistindo ▶' }}
+                                {{ course.is_enrolled ? (course.progress_percent === 0 ? 'Iniciar Curso ▶' : 'Continuar Assistindo ▶') : 'Saiba Mais / Matricular' }}
                             </Link>
                         </div>
                     </div>
