@@ -66,4 +66,59 @@ Route::get('/limpar-tudo-123', function () {
 });
 */
 
+//Exibir erros de conexão com API ASAAS
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\File;
+
+Route::get('/diagnostico-asaas', function () {
+    echo "<h1>Diagnóstico de Integração Asaas</h1>";
+    echo "<hr>";
+
+    // 1. VERIFICAR VARIÁVEIS DE AMBIENTE
+    $apiKey = env('ASAAS_API_KEY');
+    $apiUrl = env('ASAAS_API_URL');
+    
+    echo "<h3>1. Configuração (.env)</h3>";
+    echo "<strong>URL:</strong> " . $apiUrl . "<br>";
+    echo "<strong>Key detectada:</strong> " . ($apiKey ? "Sim (Inicia com: " . substr($apiKey, 0, 5) . "...)" : "<span style='color:red'>NÃO DETECTADA</span>") . "<br>";
+    
+    if (!$apiKey) {
+        echo "<p style='color:red'>ERRO CRÍTICO: O Laravel não está lendo a ASAAS_API_KEY. Tente rodar a rota de limpeza de cache novamente.</p>";
+        return;
+    }
+
+    // 2. TESTE DE CONEXÃO (PING)
+    echo "<hr><h3>2. Teste de Conexão com Asaas</h3>";
+    try {
+        // Tenta listar clientes (rota leve) apenas para testar autenticação
+        $response = Http::withHeaders(['access_token' => $apiKey])->get($apiUrl . '/customers?limit=1');
+        
+        if ($response->successful()) {
+            echo "<span style='color:green'><strong>SUCESSO:</strong> Conexão estabelecida e Chave válida!</span><br>";
+            echo "Status: " . $response->status();
+        } else {
+            echo "<span style='color:red'><strong>FALHA NA REQUISIÇÃO:</strong></span><br>";
+            echo "Status: " . $response->status() . "<br>";
+            echo "Retorno: " . $response->body();
+        }
+    } catch (\Exception $e) {
+        echo "<span style='color:red'><strong>ERRO DE CONEXÃO:</strong> O servidor não conseguiu sair para a internet ou DNS falhou.</span><br>";
+        echo "Erro: " . $e->getMessage();
+    }
+
+    // 3. LER LOGS DO LARAVEL (ÚLTIMAS 50 LINHAS)
+    echo "<hr><h3>3. Últimos Erros no Log (storage/logs/laravel.log)</h3>";
+    $logPath = storage_path('logs/laravel.log');
+    
+    if (File::exists($logPath)) {
+        $logContent = File::get($logPath);
+        // Pega as últimas 3000 caracteres
+        $lastLogs = substr($logContent, -3000);
+        echo "<pre style='background:#f4f4f4; padding:10px; border:1px solid #ccc; overflow:auto; max-height:400px;'>" . htmlspecialchars($lastLogs) . "</pre>";
+    } else {
+        echo "Arquivo de log não encontrado.";
+    }
+});
+
+
 require __DIR__.'/auth.php';
