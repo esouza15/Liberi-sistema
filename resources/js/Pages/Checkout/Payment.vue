@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -8,6 +9,14 @@ defineProps({
 
 const formatPrice = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
+
+const copied = ref(false);
+
+const copyCode = () => {
+    navigator.clipboard.writeText(props.order.qr_code_payload);
+    copied.value = true;
+    setTimeout(() => copied.value = false, 2000);
 }
 </script>
 
@@ -47,10 +56,34 @@ const formatPrice = (value) => {
                         <p class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Valor a Pagar via Pix</p>
                         <p class="text-4xl font-extrabold text-[#4DB6AC] mb-6">{{ formatPrice(order.amount) }}</p>
 
-                        <div class="bg-white p-4 rounded border inline-block mb-4 shadow-sm">
-                            <div class="w-48 h-48 bg-gray-100 flex items-center justify-center text-gray-400 text-xs text-center p-2 rounded">
-                                (O QR Code do Asaas<br>aparecerá aqui)
+                        <div class="bg-white p-4 rounded border inline-block mb-4 shadow-sm relative group">
+                            <img 
+                                v-if="order.qr_code_image" 
+                                :src="'data:image/png;base64,' + order.qr_code_image" 
+                                class="w-48 h-48 object-contain"
+                            />
+                            
+                            <div v-else class="w-48 h-48 bg-gray-100 flex items-center justify-center text-gray-400 text-xs text-center p-2 rounded">
+                                Gerando QR Code...<br>Atualize a página.
                             </div>
+                        </div>
+
+                        <div v-if="order.qr_code_payload" class="mb-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <input 
+                                    type="text" 
+                                    readonly 
+                                    :value="order.qr_code_payload" 
+                                    class="text-xs text-gray-500 border-gray-300 rounded w-64 bg-gray-50"
+                                >
+                                <button 
+                                    @click="copyCode" 
+                                    class="bg-indigo-100 text-indigo-700 px-3 py-2 rounded text-xs font-bold hover:bg-indigo-200 transition"
+                                >
+                                    Copiar
+                                </button>
+                            </div>
+                            <p v-if="copied" class="text-green-600 text-xs mt-1 font-bold">Copiado!</p>
                         </div>
                         
                         <p class="text-sm text-gray-500">
