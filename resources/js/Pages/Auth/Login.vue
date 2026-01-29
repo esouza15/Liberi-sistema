@@ -33,64 +33,74 @@ const submit = () => {
     <GuestLayout>
         <Head title="Entrar" />
 
-        <div class="flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-50 min-h-[calc(100vh-200px)]">
+        <div class="flex flex-col justify-center items-center min-h-[80vh] bg-gray-50 py-12 sm:px-6 lg:px-8">
             
-            <div class="mb-4 sm:mb-6 text-center">
-                <h2 class="text-2xl font-bold text-gray-900">Acesse sua conta</h2>
-                <p class="text-sm text-gray-600">Bem-vindo de volta!</p>
+            <div class="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
+                <h2 class="text-3xl font-extrabold text-gray-900">
+                    Acesse sua conta
+                </h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    Ou <Link :href="route('register')" class="font-medium text-indigo-600 hover:text-indigo-500">crie uma nova conta grátis</Link>
+                </p>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg mb-10 border border-gray-100">
+            <div class="w-full sm:max-w-md bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100">
                 
                 <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
                     {{ status }}
                 </div>
 
-                <form @submit.prevent="submit">
+                <form @submit.prevent="submit" class="space-y-6">
                     <div>
                         <InputLabel for="email" value="Email" />
-                        <TextInput
-                            id="email"
-                            type="email"
-                            class="mt-1 block w-full"
-                            v-model="form.email"
-                            required
-                            autofocus
-                            autocomplete="username"
-                        />
+                        <div class="mt-1">
+                            <TextInput
+                                id="email"
+                                type="email"
+                                class="block w-full"
+                                v-model="form.email"
+                                required
+                                autofocus
+                                autocomplete="username"
+                            />
+                        </div>
                         <InputError class="mt-2" :message="form.errors.email" />
                     </div>
 
-                    <div class="mt-4">
+                    <div>
                         <InputLabel for="password" value="Senha" />
-                        <TextInput
-                            id="password"
-                            type="password"
-                            class="mt-1 block w-full"
-                            v-model="form.password"
-                            required
-                            autocomplete="current-password"
-                        />
+                        <div class="mt-1">
+                            <TextInput
+                                id="password"
+                                type="password"
+                                class="block w-full"
+                                v-model="form.password"
+                                required
+                                autocomplete="current-password"
+                            />
+                        </div>
                         <InputError class="mt-2" :message="form.errors.password" />
                     </div>
 
-                    <div class="block mt-4">
+                    <div class="flex items-center justify-between">
                         <label class="flex items-center">
                             <Checkbox name="remember" v-model:checked="form.remember" />
-                            <span class="ms-2 text-sm text-gray-600">Lembrar-se</span>
+                            <span class="ml-2 text-sm text-gray-600">Lembrar-me</span>
                         </label>
+
+                        <div class="text-sm">
+                            <Link
+                                v-if="canResetPassword"
+                                :href="route('password.request')"
+                                class="font-medium text-indigo-600 hover:text-indigo-500"
+                            >
+                                Esqueceu a senha?
+                            </Link>
+                        </div>
                     </div>
 
-                    <div class="flex items-center justify-end mt-4">
-                        <Link
-                            v-if="canResetPassword"
-                            :href="route('password.request')"
-                            class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Esqueceu sua senha?
-                        </Link>
-
-                        <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                    <div>
+                        <PrimaryButton class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                             ENTRAR
                         </PrimaryButton>
                     </div>
