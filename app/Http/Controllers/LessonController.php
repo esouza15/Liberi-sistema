@@ -11,32 +11,48 @@ class LessonController extends Controller
 {
     public function store(Request $request, Course $course)
     {
-        // 1. Validação
+        if (! auth()->user()->is_admin) { abort(403); }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'video_url' => 'required|url',
-            'position' => 'integer'
+            'position' => 'nullable|integer' // Agora é 'nullable'
         ]);
 
-        // 2. Cria a aula DENTRO do curso
+        // Se não informou posição, pega a última + 1
+        if (empty($validated['position'])) {
+            $maxPosition = $course->lessons()->max('position') ?? 0;
+            $validated['position'] = $maxPosition + 1;
+        } else {
+            // Se informou, verificamos se já existe
+            $exists = $course->lessons()->where('position', $validated['position'])->exists();
+            if ($exists) {
+                // Opção A: Erro (Obriga o admin a corrigir)
+                // return back()->withErrors(['position' => 'Já existe uma aula nesta posição.']);
+                
+                // Opção B: Empurra para o final (Mais fácil)
+                $maxPosition = $course->lessons()->max('position') ?? 0;
+                $validated['position'] = $maxPosition + 1;
+            }
+        }
+
+        // Extrai o ID do Youtube
+        preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $validated['video_url'], $matches);
+        $videoId = $matches[1] ?? null;
+        $validated['embed_url'] = $videoId ? "https://www.youtube.com/embed/{$videoId}" : null;
+
         $course->lessons()->create($validated);
 
-        // 3. Recarrega a página para ver a aula nova na lista
         return back();
-
-        // 4. Bloqueia se não for admin
-        if (! auth()->user()->is_admin) {
-            abort(403, 'Acesso negado.');
-        }
     }
 
-    // Método para Marcar/Desmarcar aula
+    // Método para Marcar aula completada
     public function toggleComplete(Lesson $lesson)
     {
-        // Se já completou, remove. Se não, adiciona. (Toggle)
-        auth()->user()->completedLessons()->toggle($lesson->id);
+        // syncWithoutDetaching garante que se já existe, não duplica e nem remove
+        auth()->user()->completedLessons()->syncWithoutDetaching([$lesson->id]);
         
-        return back(); // Recarrega a página
+        return back();
     }
 
     public function show(Course $course, Lesson $lesson)

@@ -84,6 +84,15 @@ const formatPrice = (value) => {
                                     <Link :href="course.target_route" class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition">
                                         {{ course.progress_percent === 0 ? 'Começar Aula' : 'Continuar' }}
                                     </Link>
+
+                                    <div v-if="$page.props.auth.user.is_admin" class="mt-3 text-center border-t pt-2">
+                                        <Link 
+                                            :href="route('courses.edit', course.id)" 
+                                            class="text-sm text-gray-500 hover:text-indigo-600 hover:underline flex items-center justify-center gap-1"
+                                        >
+                                            ✏ Editar Curso
+                                        </Link>
+                                    </div>
                                 </div>
 
                                 <div v-else>

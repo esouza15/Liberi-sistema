@@ -39,6 +39,14 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Painel
                                 </NavLink>
+
+                                <NavLink 
+                                    v-if="$page.props.auth.user.is_admin" 
+                                    :href="route('courses.index')" 
+                                    :active="route().current('courses.*')"
+                                >
+                                    Gerenciar Cursos
+                                </NavLink>
                             </div>
                         </div>
 
@@ -144,8 +152,12 @@ const showingNavigationDropdown = ref(false);
                             :href="route('dashboard')"
                             :active="route().current('dashboard')"
                         >
-                            Dashboard
+                            Painel
                         </ResponsiveNavLink>
+
+                        <DropdownLink :href="route('logout')" method="post" as="button">
+                            Sair
+                        </DropdownLink>
                     </div>
 
                     <!-- Responsive Settings Options -->
