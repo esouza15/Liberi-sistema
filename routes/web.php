@@ -8,6 +8,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\File;
+
 // --- ROTAS PÚBLICAS (Acessíveis a todos) ---
 
 // 1. A Home é o Catálogo
@@ -67,8 +70,7 @@ Route::get('/limpar-tudo-123', function () {
 */
 
 //Exibir erros de conexão com API ASAAS
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\File;
+
 
 Route::get('/diagnostico-asaas', function () {
     echo "<h1>Diagnóstico de Integração Asaas</h1>";
