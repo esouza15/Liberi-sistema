@@ -69,7 +69,7 @@ Route::get('/limpar-tudo-123', function () {
 });
 */
 
-/*
+
 //Exibir erros de conexão com API ASAAS
 Route::get('/diagnostico-asaas', function () {
     echo "<h1>Diagnóstico de Integração Asaas</h1>";
@@ -120,13 +120,14 @@ Route::get('/diagnostico-asaas', function () {
         echo "Arquivo de log não encontrado.";
     }
 });
-*/
 
+
+/*
 //apagar depois
 Route::get('/resetar-pedidos', function () {
     \App\Models\Order::truncate(); // APAGA TODOS OS PEDIDOS DO BANCO
     return 'Pedidos apagados! Agora você pode tentar comprar novamente como se fosse a primeira vez.';
 });
-
+*/
 
 require __DIR__.'/auth.php';
