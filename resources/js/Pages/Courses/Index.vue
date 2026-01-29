@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 
 defineProps({
     courses: Array,
@@ -20,7 +21,9 @@ const formatPrice = (value) => {
         
         <header v-if="!isLoggedIn" class="bg-white shadow-sm sticky top-0 z-10 mb-8">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
-                <Link href="/" class="font-bold text-2xl text-indigo-600">Liberi Cursos</Link>
+                    <Link href="/">
+                        <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
+                    </Link>
                 <nav class="space-x-4">
                     <Link :href="route('login')" class="text-gray-600 hover:text-gray-900 font-medium">Entrar</Link>
                     <Link :href="route('register')" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Criar Conta</Link>

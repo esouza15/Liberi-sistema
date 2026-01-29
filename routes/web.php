@@ -10,7 +10,7 @@ use Inertia\Inertia;
 
 // --- ROTAS PÚBLICAS (Acessíveis a todos) ---
 
-// 1. A Home agora é o Catálogo
+// 1. A Home é o Catálogo
 Route::get('/', [CourseController::class, 'index'])->name('home');
 
 // 2. O Catálogo também responde por /courses

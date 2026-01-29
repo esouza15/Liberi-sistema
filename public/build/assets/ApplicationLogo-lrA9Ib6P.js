@@ -1,0 +1,1 @@
+import{_ as o}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{g as t,o as c}from"./app-ChhB0Yo5.js";const e={},r={src:"https://liberi-ead.com/wp-content/uploads/2024/05/cropped-logo-start24A.png",alt:"Liberi Logo",class:"h-16 w-auto"};function s(n,a){return c(),t("img",r)}const _=o(e,[["render",s]]);export{_ as A};
