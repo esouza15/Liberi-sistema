@@ -2,10 +2,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
-// Recebe a lista de cursos enviada pelo Controller
 defineProps({
     courses: Array
 });
+
+// Função para formatar preço (R$ 97,00)
+const formatPrice = (value) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
 </script>
 
 <template>
@@ -15,7 +19,7 @@ defineProps({
         <template #header>
             <div class="flex justify-between items-center">
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    Cursos Disponíveis
+                    Catálogo de Cursos
                 </h2>
                 
                 <Link 
@@ -30,48 +34,67 @@ defineProps({
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                
+                <div v-if="courses.length === 0" class="text-gray-500 text-center">
+                    Nenhum curso disponível no momento.
+                </div>
+
+                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     
-                    <div v-if="courses.length === 0" class="text-gray-500 text-center">
-                        Nenhum curso cadastrado ainda.
-                    </div>
+                    <div 
+                        v-for="course in courses" 
+                        :key="course.id" 
+                        class="flex flex-col border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition bg-white h-full"
+                    >
+                        <div class="h-48 bg-gray-200 w-full relative">
+                            <img 
+                                v-if="course.image_url" 
+                                :src="course.image_url" 
+                                class="w-full h-full object-cover" 
+                                alt="Capa do curso"
+                            />
+                            <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+                                <span class="text-4xl">📚</span>
+                            </div>
 
-                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        
-                        <Link 
-                            v-for="course in courses" 
-                            :key="course.id" 
-                            :href="course.target_route" 
-                            class="block border p-4 rounded-lg hover:shadow-lg transition bg-white cursor-pointer relative"
-                        >
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-bold text-lg text-indigo-600">{{ course.title }}</h3>
+                            <div class="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-sm font-bold text-gray-800">
+                                {{ parseFloat(course.price) === 0 ? 'GRÁTIS' : formatPrice(course.price) }}
+                            </div>
+                        </div>
+
+                        <div class="p-4 flex flex-col flex-grow justify-between">
+                            <div>
+                                <h3 class="font-bold text-lg text-gray-800 mb-1">{{ course.title }}</h3>
+                                <p class="text-gray-600 text-sm line-clamp-3 mb-4">{{ course.description }}</p>
+                            </div>
+
+                            <div class="mt-2">
                                 
-                                <span v-if="course.progress_percent === 100" class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded">
-                                    Concluído
-                                </span>
-                            </div>
+                                <div v-if="course.is_enrolled || $page.props.auth.user.is_admin">
+                                    <div class="mb-3">
+                                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                            <span>Seu Progresso</span>
+                                            <span>{{ course.progress_percent }}%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-green-500 h-2 rounded-full" :style="{ width: course.progress_percent + '%' }"></div>
+                                        </div>
+                                    </div>
 
-                            <p class="text-gray-600 mt-2 text-sm">{{ course.description || 'Sem descrição' }}</p>
-                            
-                            <div class="mt-4">
-                                <div class="flex justify-between text-xs text-gray-500 mb-1">
-                                    <span>Progresso</span>
-                                    <span>{{ course.progress_percent }}%</span>
+                                    <Link :href="course.target_route" class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded transition">
+                                        {{ course.progress_percent === 0 ? 'Começar Aula' : 'Continuar' }}
+                                    </Link>
                                 </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div 
-                                        class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" 
-                                        :style="{ width: course.progress_percent + '%' }"
-                                    ></div>
+
+                                <div v-else>
+                                    <button class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded transition opacity-50 cursor-not-allowed" title="Em breve">
+                                        Matricular-se (R$ {{ course.price }})
+                                    </button>
+                                    <p class="text-xs text-center text-gray-400 mt-2">Compra indisponível temporariamente</p>
                                 </div>
+
                             </div>
-
-                            <span class="text-xs text-gray-400 mt-4 block">
-                                {{ course.progress_percent === 0 ? 'Começar Curso →' : (course.progress_percent === 100 ? 'Revisar Curso ↺' : 'Continuar Assistindo →') }}
-                            </span>
-                        </Link>
-
+                        </div>
                     </div>
 
                 </div>

@@ -108,25 +108,30 @@ public function dashboard()
         return Inertia::render('Courses/Create');
     }
 
-    // Recebe os dados do formulário e salva no banco
     public function store(Request $request)
     {
-        // 0. bloquear acesso não autorizado
-        if (! auth()->user()->is_admin) {
-            abort(403, 'Acesso não autorizado');
-        }
+        if (! auth()->user()->is_admin) { abort(403); }
 
-        // 1. Validação (Segurança)
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'price' => 'required|numeric', // Validar preço
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validar imagem
             'video_url' => 'nullable|url'
         ]);
 
-        // 2. Salvar no Banco
+        // Upload da Imagem
+        if ($request->hasFile('image')) {
+            // Salva na pasta 'courses' dentro do disco public
+            $path = $request->file('image')->store('courses', 'public');
+            $validated['image_url'] = $path;
+        }
+
+        // Remove o campo 'image' do array (o banco espera 'image_url')
+        unset($validated['image']);
+
         Course::create($validated);
 
-        // 3. Voltar para a lista com mensagem de sucesso
         return redirect()->route('courses.index');
     }
 
