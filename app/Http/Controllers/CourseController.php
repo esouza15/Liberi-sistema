@@ -9,47 +9,42 @@ use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        // 1. Carregamos os cursos COM as aulas (para saber a ordem) e a contagem
-        $courses = Course::with('lessons') // <--- Carregamos as aulas aqui
-                        ->withCount('lessons')
-                        ->get();
 
-        // 2. Pegamos os IDs das aulas que o usuário JÁ fez
+public function index()
+    {
+        // 1. Buscamos cursos + Contagem de aulas + VERIFICAÇÃO SE É ALUNO (is_enrolled)
+        $courses = Course::withCount('lessons')
+            ->withExists(['students as is_enrolled' => function ($query) {
+                $query->where('user_id', auth()->id());
+            }])
+            ->get();
+
+        // 2. IDs das aulas que o usuário JÁ fez
         $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
 
         foreach ($courses as $course) {
-            // Contagem de progresso (igual antes)
+            // Contagem de progresso
             $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
             
-            if ($course->lessons_count > 0) {
-                $course->progress_percent = round(($course->completed_lessons_count / $course->lessons_count) * 100);
-            } else {
-                $course->progress_percent = 0;
-            }
-
-            // --- A MÁGICA DO "CONTINUAR" COMEÇA AQUI ---
+            $course->progress_percent = ($course->lessons_count > 0) 
+                ? round(($course->completed_lessons_count / $course->lessons_count) * 100) 
+                : 0;
             
-            // Procura a primeira aula que NÃO está na lista de concluídas
+            // Define rota de destino "inteligente"
             $nextLesson = $course->lessons
                 ->whereNotIn('id', $userCompletedIds)
                 ->sortBy('position')
                 ->first();
 
-            // Lógica de Destino:
             if ($nextLesson) {
-                // Se tem aula pendente, o link vai direto para o Player da aula
                 $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
-            } elseif ($course->lessons->count() > 0) {
-                // Se já acabou tudo, manda para a primeira aula (para revisar) ou para a grade
-                $course->target_route = route('courses.show', $course->id);
             } else {
-                // Se o curso não tem aulas, manda para a grade (para o admin cadastrar)
                 $course->target_route = route('courses.show', $course->id);
+            }
+            
+            // 3. CORREÇÃO DA IMAGEM (O que faltava)
+            if ($course->image_url) {
+                $course->image_url = '/storage/' . $course->image_url;
             }
         }
 
