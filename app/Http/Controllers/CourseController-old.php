@@ -208,10 +208,22 @@ public function dashboard()
     {
         if (! auth()->user()->is_admin) { abort(403); }
 
-        // Apaga o curso (o banco deve apagar as aulas e pedidos em cascata se configurado,
-        // senão ele apaga só o curso)
+        // 1. Limpa as Matrículas (Remove alunos desse curso)
+        // Isso evita erro na tabela pivô 'course_user'
+        $course->users()->detach();
+
+        // 2. Limpa as Aulas (Apaga todas as aulas vinculadas)
+        // Isso evita o erro de integridade do banco (Foreign Key)
+        $course->lessons()->delete();
+
+        // 3. Apaga os Pedidos (Opcional - Só se sua tabela orders não tiver cascade)
+        // Como recriamos a tabela orders com CASCADE, o banco deve fazer isso sozinho.
+        // Mas se der erro, descomente a linha abaixo:
+        // \App\Models\Order::where('course_id', $course->id)->delete();
+
+        // 4. Finalmente, apaga o Curso
         $course->delete();
 
-        return redirect()->route('courses.index')->with('success', 'Curso excluído com sucesso!');
+        return redirect()->route('courses.index')->with('success', 'Curso e todo seu conteúdo foram excluídos!');
     }
 }
