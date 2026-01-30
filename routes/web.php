@@ -185,4 +185,55 @@ Route::get('/debug-aula/{courseId}/{lessonId}', function ($courseId, $lessonId) 
 });
 */
 
+Route::get('/debug-excluir-curso/{id}', function ($id) {
+    echo "<h1>Diagnóstico de Exclusão de Curso</h1>";
+    echo "<hr>";
+    
+    // 1. Verifica Admin
+    $user = auth()->user();
+    if (!$user || !$user->is_admin) {
+        die("❌ ERRO: Você precisa estar logado como ADMIN para testar isso.");
+    }
+    echo "✅ <strong>Permissão:</strong> Usuário é Admin.<br>";
+
+    // 2. Busca o Curso
+    $course = \App\Models\Course::withCount(['lessons', 'users'])->find($id);
+    
+    if (!$course) {
+        die("❌ ERRO: Curso ID $id não encontrado.");
+    }
+    
+    echo "📦 <strong>Curso Encontrado:</strong> {$course->title} (ID: {$course->id})<br>";
+    echo "📊 <strong>Dados vinculados:</strong> {$course->lessons_count} aulas, {$course->users_count} alunos matriculados.<br>";
+
+    // 3. Tenta Excluir (Simulando o Controller)
+    try {
+        echo "<hr>🔄 <strong>Tentando limpar vínculos...</strong><br>";
+        
+        // Limpa alunos
+        $course->users()->detach(); 
+        echo " - Alunos desvinculados.<br>";
+        
+        // Limpa aulas
+        $course->lessons()->delete(); 
+        echo " - Aulas excluídas.<br>";
+        
+        // Limpa pedidos (Opcional, mas seguro)
+        \App\Models\Order::where('course_id', $course->id)->delete();
+        echo " - Pedidos removidos.<br>";
+
+        echo "<hr>🗑️ <strong>Tentando excluir o curso...</strong><br>";
+        $course->delete();
+        
+        echo "<h2 style='color:green'>SUCESSO! 🏆</h2>";
+        echo "<p>O curso foi excluído corretamente pelo Banco de Dados. O problema do botão não aparecer é 100% VISUAL (Vue/Cache).</p>";
+        echo "<a href='/courses'>Voltar para lista de cursos</a>";
+
+    } catch (\Exception $e) {
+        echo "<h2 style='color:red'>FALHA FATAL 💀</h2>";
+        echo "<strong>Ocorreu um erro no banco de dados:</strong><br>";
+        echo $e->getMessage();
+    }
+});
+
 require __DIR__.'/auth.php';
