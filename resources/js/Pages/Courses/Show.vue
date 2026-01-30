@@ -1,12 +1,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, Link } from '@inertiajs/vue3';
+import { Head, useForm, Link, router } from '@inertiajs/vue3'; // Adicionado router
 import { ref } from 'vue';
 
 // Componentes de UI
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue'; // Adicionado Botão Vermelho
 import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
@@ -14,7 +15,7 @@ const props = defineProps({
 });
 
 // --- LÓGICA DE EDIÇÃO DO CURSO (TOGGLE) ---
-const isEditingCourse = ref(false); // Controla se mostra o formulário ou o texto
+const isEditingCourse = ref(false);
 
 const formCourse = useForm({
     _method: 'PUT',
@@ -28,9 +29,16 @@ const formCourse = useForm({
 const submitCourseUpdate = () => {
     formCourse.post(route('courses.update', props.course.id), {
         onSuccess: () => {
-            isEditingCourse.value = false; // Fecha o formulário ao salvar
+            isEditingCourse.value = false;
         }
     });
+};
+
+// --- NOVA FUNÇÃO: EXCLUIR CURSO ---
+const destroyCourse = () => {
+    if (confirm('ATENÇÃO: Tem certeza que deseja excluir este curso?\n\nIsso apagará todas as aulas e removerá o acesso dos alunos matriculados.\n\nEsta ação não pode ser desfeita.')) {
+        router.delete(route('courses.destroy', props.course.id));
+    }
 };
 
 // --- LÓGICA DE NOVA AULA ---
@@ -87,7 +95,8 @@ const formatPrice = (value) => {
                                 <div v-else class="w-full h-32 bg-gray-200 flex items-center justify-center rounded text-gray-400">Sem Capa</div>
                             </div>
                             
-                            <div class="w-3/4 pr-20"> <h3 class="text-2xl font-bold text-gray-900">{{ course.title }}</h3>
+                            <div class="w-3/4 pr-20"> 
+                                <h3 class="text-2xl font-bold text-gray-900">{{ course.title }}</h3>
                                 <p class="text-green-600 font-bold text-lg mb-2">{{ parseFloat(course.price) === 0 ? 'Gratuito' : formatPrice(course.price) }}</p>
                                 <p class="text-gray-600 whitespace-pre-line">{{ course.description }}</p>
                                 
@@ -127,8 +136,14 @@ const formatPrice = (value) => {
                                 </div>
                             </div>
 
-                            <div class="flex justify-end pt-4 border-t">
-                                <PrimaryButton :disabled="formCourse.processing">Salvar Alterações do Curso</PrimaryButton>
+                            <div class="flex justify-between items-center pt-4 border-t mt-4">
+                                <DangerButton type="button" @click="destroyCourse">
+                                    Excluir Curso
+                                </DangerButton>
+
+                                <PrimaryButton :disabled="formCourse.processing">
+                                    Salvar Alterações
+                                </PrimaryButton>
                             </div>
                         </form>
                     </div>
