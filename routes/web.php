@@ -131,4 +131,49 @@ Route::get('/resetar-pedidos', function () {
 });
 */
 
+Route::get('/debug-aula/{courseId}/{lessonId}', function ($courseId, $lessonId) {
+    echo "<h1>Diagnóstico de Edição de Aula</h1>";
+    echo "<hr>";
+    echo "<pre style='font-size: 14px; background: #f4f4f4; padding: 15px;'>";
+
+    // 1. VERIFICAR USUÁRIO
+    $user = auth()->user();
+    if (!$user) {
+        echo "❌ <strong>ERRO:</strong> Você não está logado.\n";
+        return;
+    }
+    
+    echo "👤 <strong>Usuário:</strong> " . $user->name . " (ID: " . $user->id . ")\n";
+    echo "🔑 <strong>É Admin? (is_admin):</strong> [" . $user->is_admin . "] " . ($user->is_admin ? "✅ SIM" : "⛔ NÃO") . "\n";
+    
+    if (!$user->is_admin) {
+        echo "\n⚠️ <strong>ALERTA:</strong> O Controller bloqueia quem não tem is_admin = 1.\n";
+    }
+
+    // 2. VERIFICAR CURSO
+    $course = \App\Models\Course::find($courseId);
+    if (!$course) {
+        echo "❌ <strong>ERRO:</strong> Curso ID $courseId não encontrado no banco.\n";
+    } else {
+        echo "📚 <strong>Curso:</strong> " . $course->title . " (ID: " . $course->id . ")\n";
+    }
+
+    // 3. VERIFICAR AULA
+    $lesson = \App\Models\Lesson::find($lessonId);
+    if (!$lesson) {
+        echo "❌ <strong>ERRO:</strong> Aula ID $lessonId não encontrada no banco.\n";
+    } else {
+        echo "📹 <strong>Aula:</strong> " . $lesson->title . " (ID: " . $lesson->id . ")\n";
+        echo "   - Course ID da aula: " . $lesson->course_id . "\n";
+        
+        if ($course && $lesson->course_id != $course->id) {
+            echo "⚠️ <strong>ALERTA DE VÍNCULO:</strong> Esta aula pertence ao curso " . $lesson->course_id . ", mas você tentou acessar pelo curso " . $course->id . ".\n";
+        }
+    }
+
+    echo "</pre>";
+    echo "<hr>";
+    echo "<p>Se tudo acima estiver ✅, o problema é 100% no arquivo .vue (Frontend).</p>";
+});
+
 require __DIR__.'/auth.php';
