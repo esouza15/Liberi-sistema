@@ -25,6 +25,12 @@ class Course extends Model
         return $this->hasMany(Lesson::class)->orderBy('position');
     }
 
+    public function users()
+    {
+        // Indica que o curso pertence a muitos usuários (através da tabela pivô course_user)
+        return $this->belongsToMany(User::class, 'course_user');
+    }
+
     // Alunos matriculados neste curso
     public function students()
     {
