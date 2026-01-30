@@ -219,9 +219,25 @@ class CourseController extends Controller
         return redirect()->route('courses.show', $course->id)->with('success', 'Curso atualizado!');
     }
 
-    public function destroy(string $id)
+    public function destroy(Course $course)
     {
-        // Implementar futuramente se desejar deletar cursos
+        if (! auth()->user()->is_admin) { abort(403); }
+
+        // 1. Limpa as Matrículas (Usa a relação 'users' que corrigimos no Model)
+        $course->users()->detach();
+
+        // 2. Limpa as Aulas (Apaga todas as aulas vinculadas)
+        $course->lessons()->delete();
+
+        // 3. Limpa os Pedidos (ESSA PARTE FALTAVA)
+        // Se houver registros de vendas/pedidos, o banco trava a exclusão do curso.
+        // Vamos apagar os pedidos vinculados a este curso.
+        \App\Models\Order::where('course_id', $course->id)->delete();
+
+        // 4. Finalmente, apaga o Curso
+        $course->delete();
+
+        return redirect()->route('courses.index')->with('success', 'Curso excluído com sucesso!');
     }
 
     /**
