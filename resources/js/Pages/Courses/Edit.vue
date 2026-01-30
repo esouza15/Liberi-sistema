@@ -6,73 +6,73 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
-// 1. Definição correta das props
 const props = defineProps({
     course: {
-        type: Object,
-        required: true
-    },
-    lesson: {
         type: Object,
         required: true
     }
 });
 
-// 2. Inicialização segura do formulário
-// O "|| ''" garante que se vier nulo do banco, não quebra o JS
+// Formulário para CURSOS (Título, Descrição, Preço)
 const form = useForm({
-    title: props.lesson.title || '',
-    video_url: props.lesson.video_url || '',
-    position: props.lesson.position || 0,
+    title: props.course.title || '',
+    description: props.course.description || '',
+    price: props.course.price || '',
 });
 
 const submit = () => {
-    form.put(route('lessons.update', [props.course.id, props.lesson.id]));
+    form.put(route('courses.update', props.course.id));
 };
 </script>
 
 <template>
-    <Head title="Editar Aula" />
+    <Head title="Editar Curso" />
 
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800">
-                Editando: {{ lesson.title }}
+                Editar Curso: {{ course.title }}
             </h2>
         </template>
 
         <div class="py-12">
-            <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg">
-                    <form @submit.prevent="submit" class="space-y-6">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
                         
-                        <div>
-                            <InputLabel for="title" value="Título da Aula" />
-                            <TextInput id="title" v-model="form.title" type="text" class="mt-1 block w-full" required />
-                            <InputError class="mt-2" :message="form.errors.title" />
-                        </div>
+                        <form @submit.prevent="submit" class="space-y-6">
+                            
+                            <div>
+                                <InputLabel for="title" value="Título do Curso" />
+                                <TextInput id="title" type="text" class="mt-1 block w-full" v-model="form.title" required autofocus />
+                                <InputError class="mt-2" :message="form.errors.title" />
+                            </div>
 
-                        <div>
-                            <InputLabel for="video_url" value="URL do YouTube" />
-                            <TextInput id="video_url" v-model="form.video_url" type="url" class="mt-1 block w-full" required />
-                            <InputError class="mt-2" :message="form.errors.video_url" />
-                        </div>
+                            <div>
+                                <InputLabel for="description" value="Descrição" />
+                                <textarea 
+                                    id="description" 
+                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" 
+                                    v-model="form.description" 
+                                    rows="4"
+                                ></textarea>
+                                <InputError class="mt-2" :message="form.errors.description" />
+                            </div>
 
-                        <div>
-                            <InputLabel for="position" value="Ordem (Posição)" />
-                            <TextInput id="position" v-model="form.position" type="number" class="mt-1 block w-full" required />
-                        </div>
+                            <div>
+                                <InputLabel for="price" value="Preço (R$)" />
+                                <TextInput id="price" type="number" step="0.01" class="mt-1 block w-full" v-model="form.price" required />
+                                <InputError class="mt-2" :message="form.errors.price" />
+                            </div>
 
-                        <div class="flex justify-end gap-4">
-                            <Link :href="route('courses.show', course.id)" class="text-gray-600 underline self-center">
-                                Cancelar
-                            </Link>
-                            <PrimaryButton :disabled="form.processing">
-                                Salvar Alterações
-                            </PrimaryButton>
-                        </div>
+                            <div class="flex items-center justify-end gap-4">
+                                <Link :href="route('courses.index')" class="text-gray-600 underline text-sm">Cancelar</Link>
+                                <PrimaryButton :disabled="form.processing">Salvar Curso</PrimaryButton>
+                            </div>
 
-                    </form>
+                        </form>
+
+                    </div>
                 </div>
             </div>
         </div>

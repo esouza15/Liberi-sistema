@@ -131,6 +131,8 @@ Route::get('/resetar-pedidos', function () {
 });
 */
 
+
+/*
 Route::get('/debug-aula/{courseId}/{lessonId}', function ($courseId, $lessonId) {
     echo "<h1>Diagnóstico de Edição de Aula</h1>";
     echo "<hr>";
@@ -175,5 +177,6 @@ Route::get('/debug-aula/{courseId}/{lessonId}', function ($courseId, $lessonId) 
     echo "<hr>";
     echo "<p>Se tudo acima estiver ✅, o problema é 100% no arquivo .vue (Frontend).</p>";
 });
+*/
 
 require __DIR__.'/auth.php';
