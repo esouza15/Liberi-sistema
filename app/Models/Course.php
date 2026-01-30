@@ -27,8 +27,7 @@ class Course extends Model
 
     public function users()
     {
-        // Indica que o curso pertence a muitos usuários (através da tabela pivô course_user)
-        return $this->belongsToMany(User::class, 'course_user');
+        return $this->belongsToMany(User::class, 'enrollments');
     }
 
     // Alunos matriculados neste curso
