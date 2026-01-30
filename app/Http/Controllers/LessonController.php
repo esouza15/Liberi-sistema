@@ -133,4 +133,14 @@ class LessonController extends Controller
         // Volta para a lista de aulas (Gestão)
         return redirect()->route('courses.show', $course->id)->with('success', 'Aula atualizada!');
     }
+
+    public function destroy(Course $course, Lesson $lesson)
+    {
+        if (! auth()->user()->is_admin) { abort(403); }
+
+        $lesson->delete();
+
+        // Volta para a página do curso
+        return redirect()->route('courses.show', $course->id)->with('success', 'Aula excluída!');
+    }
 }

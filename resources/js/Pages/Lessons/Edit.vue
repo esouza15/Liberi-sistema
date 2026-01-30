@@ -3,16 +3,15 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue'; // Importado
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3'; // router importado
 
-// Recebe os dados do Controller
 const props = defineProps({
     course: { type: Object, required: true },
     lesson: { type: Object, required: true }
 });
 
-// Configura o formulário com os dados existentes
 const form = useForm({
     title: props.lesson.title || '',
     video_url: props.lesson.video_url || '',
@@ -22,6 +21,13 @@ const form = useForm({
 const submit = () => {
     form.put(route('lessons.update', [props.course.id, props.lesson.id]));
 };
+
+// Função de Excluir Aula
+const destroy = () => {
+    if (confirm('Tem certeza que deseja excluir esta aula? Não há como desfazer.')) {
+        router.delete(route('lessons.destroy', [props.course.id, props.lesson.id]));
+    }
+};
 </script>
 
 <template>
@@ -30,7 +36,7 @@ const submit = () => {
     <AuthenticatedLayout>
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800">
-                Editando Aula: {{ lesson.title }}
+                Editar Aula: {{ lesson.title }}
             </h2>
         </template>
 
@@ -56,13 +62,19 @@ const submit = () => {
                             <TextInput id="position" v-model="form.position" type="number" class="mt-1 block w-full" required />
                         </div>
 
-                        <div class="flex justify-end gap-4 pt-4">
-                            <Link :href="route('courses.show', course.id)" class="text-gray-600 underline self-center">
-                                Cancelar
-                            </Link>
-                            <PrimaryButton :disabled="form.processing">
-                                Salvar Alterações
-                            </PrimaryButton>
+                        <div class="flex items-center justify-between mt-8 pt-6 border-t">
+                            <DangerButton type="button" @click="destroy">
+                                Excluir Aula
+                            </DangerButton>
+
+                            <div class="flex items-center gap-4">
+                                <Link :href="route('courses.show', course.id)" class="text-gray-600 underline text-sm">
+                                    Cancelar
+                                </Link>
+                                <PrimaryButton :disabled="form.processing">
+                                    Salvar Alterações
+                                </PrimaryButton>
+                            </div>
                         </div>
 
                     </form>

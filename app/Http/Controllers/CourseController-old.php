@@ -203,4 +203,15 @@ public function dashboard()
     {
         //
     }
+
+    public function destroy(Course $course)
+    {
+        if (! auth()->user()->is_admin) { abort(403); }
+
+        // Apaga o curso (o banco deve apagar as aulas e pedidos em cascata se configurado,
+        // senão ele apaga só o curso)
+        $course->delete();
+
+        return redirect()->route('courses.index')->with('success', 'Curso excluído com sucesso!');
+    }
 }

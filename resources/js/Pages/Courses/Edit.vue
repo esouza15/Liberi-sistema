@@ -3,17 +3,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import DangerButton from '@/Components/DangerButton.vue'; // Botão Vermelho
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 
 const props = defineProps({
-    course: {
-        type: Object,
-        required: true
-    }
+    course: { type: Object, required: true }
 });
 
-// Formulário para CURSOS (Título, Descrição, Preço)
 const form = useForm({
     title: props.course.title || '',
     description: props.course.description || '',
@@ -22,6 +19,13 @@ const form = useForm({
 
 const submit = () => {
     form.put(route('courses.update', props.course.id));
+};
+
+// Função de Excluir Curso
+const destroy = () => {
+    if (confirm('ATENÇÃO: Excluir o curso apagará todas as aulas e removerá o acesso dos alunos. Tem certeza?')) {
+        router.delete(route('courses.destroy', props.course.id));
+    }
 };
 </script>
 
@@ -44,18 +48,13 @@ const submit = () => {
                             
                             <div>
                                 <InputLabel for="title" value="Título do Curso" />
-                                <TextInput id="title" type="text" class="mt-1 block w-full" v-model="form.title" required autofocus />
+                                <TextInput id="title" type="text" class="mt-1 block w-full" v-model="form.title" required />
                                 <InputError class="mt-2" :message="form.errors.title" />
                             </div>
 
                             <div>
                                 <InputLabel for="description" value="Descrição" />
-                                <textarea 
-                                    id="description" 
-                                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" 
-                                    v-model="form.description" 
-                                    rows="4"
-                                ></textarea>
+                                <textarea id="description" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" v-model="form.description" rows="4"></textarea>
                                 <InputError class="mt-2" :message="form.errors.description" />
                             </div>
 
@@ -65,9 +64,15 @@ const submit = () => {
                                 <InputError class="mt-2" :message="form.errors.price" />
                             </div>
 
-                            <div class="flex items-center justify-end gap-4">
-                                <Link :href="route('courses.index')" class="text-gray-600 underline text-sm">Cancelar</Link>
-                                <PrimaryButton :disabled="form.processing">Salvar Curso</PrimaryButton>
+                            <div class="flex items-center justify-between mt-8 pt-6 border-t">
+                                <DangerButton type="button" @click="destroy">
+                                    Excluir Curso
+                                </DangerButton>
+
+                                <div class="flex items-center gap-4">
+                                    <Link :href="route('courses.index')" class="text-gray-600 underline text-sm">Cancelar</Link>
+                                    <PrimaryButton :disabled="form.processing">Salvar Curso</PrimaryButton>
+                                </div>
                             </div>
 
                         </form>

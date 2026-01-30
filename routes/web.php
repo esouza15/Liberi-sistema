@@ -51,10 +51,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/courses/{course}/lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
     Route::post('/lessons/{lesson}/complete', [LessonController::class, 'toggleComplete'])->name('lessons.complete');
 
+    // Opção de Deletar Cursos/Aulas
+    Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
+    Route::delete('/courses/{course}/lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
+
     // Checkout
     Route::post('/course/{course}/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/{order}', [CheckoutController::class, 'show'])->name('checkout.show');
 });
+
+
 
 /*
 // --- ROTA TEMPORÁRIA DE MANUTENÇÃO (APAGAR DEPOIS) ---
