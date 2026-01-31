@@ -223,27 +223,21 @@ class CourseController extends Controller
     {
         if (! auth()->user()->is_admin) { abort(403); }
 
-        // --- MODO LEGACY (DIREITO ADQUIRIDO) ---
-        
-        // 1. NÃO usamos o detach().
-        //$course->lessons()->delete();
-        // A matrícula continua existindo no banco. O aluno antigo
-        // ainda conseguirá acessar a rota /courses/{id} se tiver o link direto
-        // ou através do histórico dele.
+        // 1. Limpa as Matrículas (Usa a relação 'users' que corrigimos no Model)
+        $course->users()->detach();
 
-        // 2. Soft Delete nas aulas
-        // As aulas são marcadas como excluídas, mas como o curso pai
-        // também será excluído (soft), o Laravel entende o contexto.
+        // 2. Limpa as Aulas (Apaga todas as aulas vinculadas)
         $course->lessons()->delete();
 
-        // 3. NÃO apagamos os pedidos (Order).
-        // O histórico financeiro fica 100% preservado.
+        // 3. Limpa os Pedidos (ESSA PARTE FALTAVA)
+        // Se houver registros de vendas/pedidos, o banco trava a exclusão do curso.
+        // Vamos apagar os pedidos vinculados a este curso.
+        \App\Models\Order::where('course_id', $course->id)->delete();
 
-        // 4. Soft Delete no Curso
-        // Ele some das listas públicas (index), mas continua no banco.
+        // 4. Finalmente, apaga o Curso
         $course->delete();
 
-        return redirect()->route('courses.index')->with('success', 'Curso removido da Loja! Alunos antigos continuam com acesso.');
+        return redirect()->route('courses.index')->with('success', 'Curso excluído com sucesso!');
     }
 
     /**
