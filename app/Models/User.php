@@ -59,4 +59,12 @@ class User extends Authenticatable
                     ->withPivot('enrolled_at');
     }
 
+    public function courses()
+    {
+        // Relacionamento: Um Usuário tem muitos Cursos
+        // (Através da tabela de matrícula 'enrollments')
+        return $this->belongsToMany(Course::class, 'enrollments')
+                    ->withTimestamps();
+    }
+
 }
