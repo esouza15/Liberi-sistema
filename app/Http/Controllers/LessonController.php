@@ -55,49 +55,36 @@ class LessonController extends Controller
         return back();
     }
 
-    public function show(Course $course, Lesson $lesson)
+    public function show($courseId, $lessonId)
     {
-        // 1. O Porteiro: Verifica se o usuário tem matrícula
-        // Se NÃO for Admin E NÃO estiver matriculado -> Bloqueia
-        $isEnrolled = auth()->user()->enrolledCourses()->where('course_id', $course->id)->exists();
+        // 1. Busca Curso e Aula (Permitindo itens da lixeira / Deletados)
+        $course = \App\Models\Course::withTrashed()->findOrFail($courseId);
         
-        if (!auth()->user()->is_admin && !$isEnrolled) {
-            // Redireciona para a página de vendas ou dá erro
-            return redirect()->route('courses.index')->with('error', 'Você precisa se matricular para assistir.');
-            // Por enquanto volta para a Index, mas depois vai para o Checkout
+        $lesson = \App\Models\Lesson::withTrashed()
+            ->where('course_id', $courseId)
+            ->findOrFail($lessonId);
+
+        $user = auth()->user();
+
+        // 2. TRAVA DE SEGURANÇA PARA ITENS DELETADOS
+        // Se o curso ou a aula foram deletados, precisamos verificar permissão rigorosa.
+        if ($course->deleted_at || $lesson->deleted_at) {
+            
+            // Verifica se o aluno REALMENTE comprou esse curso
+            $isEnrolled = $course->users()->where('user_id', $user->id)->exists();
+
+            // Se não for Admin E não for Aluno Matriculado -> Bloqueia (404)
+            if (!$user->is_admin && !$isEnrolled) {
+                abort(404);
+            }
         }
 
-        // 2. Carrega todas as aulas do curso (para o menu e navegação)
-        // E já verifica quais o usuário logado completou!
-        $course->load(['lessons' => function ($query) {
-            $query->orderBy('position', 'asc')
-                  ->withExists(['users as is_completed' => function ($q) {
-                      $q->where('user_id', auth()->id());
-                  }]);
-        }]);
-
-        // 3. Lógica do Anterior / Próximo
-        // Pega a lista de aulas ordenadas
-        $lessons = $course->lessons;
-        
-        // Encontra o índice da aula atual na lista (0, 1, 2...)
-        $currentIndex = $lessons->search(function($item) use ($lesson) {
-            return $item->id === $lesson->id;
-        });
-
-        // 4. Define quem é quem
-        $prevLesson = $currentIndex > 0 ? $lessons[$currentIndex - 1] : null;
-        $nextLesson = $currentIndex < ($lessons->count() - 1) ? $lessons[$currentIndex + 1] : null;
-
-        // 5. Verifica se a aula ATUAL está completa
-        $isCompleted = auth()->user()->completedLessons()->where('lesson_id', $lesson->id)->exists();
-
+        // 3. Renderiza a aula
         return Inertia::render('Lessons/Watch', [
             'course' => $course,
-            'currentLesson' => $lesson,
-            'isCompleted' => $isCompleted, // Enviamos para o Vue
-            'prevLesson' => $prevLesson,   // Botão Anterior
-            'nextLesson' => $nextLesson    // Botão Próximo
+            'lesson' => $lesson,
+            // Na lista lateral, também trazemos as aulas deletadas para manter a sequência
+            'lessons' => $course->lessons()->withTrashed()->orderBy('position')->get(),
         ]);
     }
 

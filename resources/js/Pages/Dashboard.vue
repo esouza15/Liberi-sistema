@@ -7,7 +7,7 @@ const props = defineProps({
     courses: Array
 });
 
-// 1. ADICIONAMOS A FUNÇÃO DE FORMATAR PREÇO
+// Formatação de preço (Apenas visual, pois no dashboard tudo já foi comprado)
 const formatPrice = (value) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 }
@@ -35,8 +35,11 @@ const hasStartedAnyCourse = computed(() => {
                     </p>
                 </div>
 
-                <div v-if="courses.length === 0" class="text-center text-gray-500">
-                    Nenhum curso encontrado.
+                <div v-if="courses.length === 0" class="text-center text-gray-500 py-10">
+                    <p class="text-xl">Você ainda não se matriculou em nenhum curso.</p>
+                    <Link :href="route('courses.index')" class="text-indigo-600 underline mt-2 inline-block">
+                        Ver Catálogo de Cursos
+                    </Link>
                 </div>
 
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -56,8 +59,8 @@ const hasStartedAnyCourse = computed(() => {
                                 <span class="text-4xl">📚</span>
                             </div>
                             
-                            <div v-if="!course.is_enrolled" class="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-sm font-bold text-gray-800">
-                                {{ parseFloat(course.price) === 0 ? 'GRÁTIS' : formatPrice(course.price) }}
+                            <div class="absolute top-2 right-2 bg-green-100 px-2 py-1 rounded shadow text-xs font-bold text-green-800">
+                                MATRICULADO
                             </div>
                         </div>
 
@@ -65,29 +68,25 @@ const hasStartedAnyCourse = computed(() => {
                             <div>
                                 <h3 class="font-bold text-lg text-gray-800 mb-2">{{ course.title }}</h3>
                                 
-                                <div v-if="course.is_enrolled" class="mb-2">
+                                <div class="mb-2">
                                     <div class="flex justify-between text-xs text-gray-500 mb-1">
                                         <span>Progresso</span>
-                                        <span>{{ course.progress_percent }}%</span>
+                                        <span>{{ course.progress_percent || 0 }}%</span>
                                     </div>
                                     <div class="w-full bg-gray-200 rounded-full h-2.5">
                                         <div 
                                             class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" 
-                                            :style="{ width: course.progress_percent + '%' }"
+                                            :style="{ width: (course.progress_percent || 0) + '%' }"
                                         ></div>
                                     </div>
-                                </div>
-                                <div v-else class="mb-2 text-sm text-gray-500">
-                                    Toque abaixo para ver detalhes e se matricular.
                                 </div>
                             </div>
 
                             <Link 
-                                :href="course.target_route" 
-                                class="mt-4 block w-full text-center font-bold py-2 rounded transition text-white"
-                                :class="course.is_enrolled ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700'"
+                                :href="route('courses.show', course.id)" 
+                                class="mt-4 block w-full text-center font-bold py-2 rounded transition text-white bg-green-600 hover:bg-green-700"
                             >
-                                {{ course.is_enrolled ? (course.progress_percent === 0 ? 'Iniciar Curso ▶' : 'Continuar Assistindo ▶') : 'Saiba Mais / Matricular' }}
+                                {{ (course.progress_percent || 0) === 0 ? 'Iniciar Curso ▶' : 'Continuar Assistindo ▶' }}
                             </Link>
                         </div>
                     </div>
