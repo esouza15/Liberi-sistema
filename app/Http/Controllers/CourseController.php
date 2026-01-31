@@ -90,50 +90,10 @@ class CourseController extends Controller
      */
     public function dashboard()
     {
-        $courses = Course::with('lessons')
-                        ->withCount('lessons')
-                        ->get();
+        $user = auth()->user();
 
-        $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
-        // 1. Pegamos a lista de IDs dos cursos que o aluno COMPROU
-        $enrolledCourseIds = auth()->user()->enrolledCourses()->pluck('course_id')->toArray();
-
-        foreach ($courses as $course) {
-            $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
-            
-            if ($course->lessons_count > 0) {
-                $course->progress_percent = round(($course->completed_lessons_count / $course->lessons_count) * 100);
-            } else {
-                $course->progress_percent = 0;
-            }
-
-            // Verifica se está matriculado
-            $course->is_enrolled = in_array($course->id, $enrolledCourseIds);
-
-            // --- DEFINIÇÃO INTELIGENTE DA ROTA ---
-            if ($course->is_enrolled) {
-                // CENÁRIO A: É ALUNO -> Vai para a próxima aula
-                $nextLesson = $course->lessons
-                    ->whereNotIn('id', $userCompletedIds)
-                    ->sortBy('position')
-                    ->first();
-
-                if ($nextLesson) {
-                    $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
-                } else {
-                    $course->target_route = route('courses.show', $course->id);
-                }
-            } else {
-                // CENÁRIO B: NÃO É ALUNO -> Vai para a Página de Vendas (Landing Page)
-                // Isso elimina o clique intermediário no catálogo!
-                $course->target_route = route('courses.public', $course->id);
-            }
-
-            // Correção da Imagem
-            if ($course->image_url && !str_starts_with($course->image_url, '/storage')) {
-                $course->image_url = '/storage/' . $course->image_url;
-            }
-        }
+        // O withTrashed() traz os cursos ativos E os arquivados que o aluno comprou.
+        $courses = $user->courses()->withTrashed()->get();
 
         return Inertia::render('Dashboard', [
             'courses' => $courses
@@ -143,18 +103,34 @@ class CourseController extends Controller
     /**
      * GESTÃO DO CURSO (Show)
      */
-    public function show(Course $course)
+    public function show($id)
     {
-        $course->load(['lessons' => function ($query) {
-            $query->orderBy('position', 'asc');
-        }]);
+        // 1. Busca o curso (inclusive na lixeira)
+        // E também busca as Aulas (inclusive na lixeira)
+        $course = Course::withTrashed()
+            ->with(['lessons' => function ($query) {
+                $query->withTrashed()->orderBy('position');
+            }])
+            ->findOrFail($id);
 
-        if ($course->image_url && !str_starts_with($course->image_url, '/storage')) {
-             $course->image_url = '/storage/' . $course->image_url;
+        $user = auth()->user();
+
+        // 2. VERIFICAÇÃO DE SEGURANÇA (IMPORTANTE!)
+        // Se o curso estiver excluído (deleted_at não é nulo),
+        // só permitimos o acesso se o usuário for ADMIN ou se for ALUNO MATRICULADO.
+        if ($course->deleted_at) {
+            $isEnrolled = $course->users()->where('user_id', $user->id)->exists();
+            
+            if (!$user->is_admin && !$isEnrolled) {
+                // Se não é admin e não comprou, dá erro 404 (como se não existisse)
+                abort(404);
+            }
         }
 
         return Inertia::render('Courses/Show', [
-            'course' => $course
+            'course' => $course,
+            // Verifica se o usuário atual já comprou este curso
+            'isEnrolled' => $course->users()->where('user_id', $user->id)->exists()
         ]);
     }
 
