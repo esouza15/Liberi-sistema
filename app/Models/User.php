@@ -64,7 +64,7 @@ class User extends Authenticatable
         // Relacionamento: Um Usuário tem muitos Cursos
         // (Através da tabela de matrícula 'enrollments')
         return $this->belongsToMany(Course::class, 'enrollments')
-                    ->withTimestamps();
+                    //->withTimestamps();
     }
 
 }
