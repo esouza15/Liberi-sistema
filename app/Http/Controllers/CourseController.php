@@ -12,76 +12,21 @@ class CourseController extends Controller
     /**
      * CATÁLOGO DE CURSOS (Index)
      */
+    // 1. LISTAGEM (INDEX) - Mostra deletados para o Admin
     public function index()
     {
-        // 1. Inicia a query básica
-        $query = Course::withCount('lessons');
+        $query = Course::query();
 
-        // 2. Se estiver logado, verifica matrícula
-        if (auth()->check()) {
-            $query->withExists(['students as is_enrolled' => function ($q) {
-                $q->where('user_id', auth()->id());
-            }]);
-        }
-
-        $courses = $query->get();
-        
-        // 3. Prepara dados auxiliares (apenas se logado)
-        $userCompletedIds = [];
-        if (auth()->check()) {
-            $userCompletedIds = auth()->user()->completedLessons()->pluck('lesson_id')->toArray();
-        }
-
-        foreach ($courses as $course) {
-            // Se NÃO estiver logado, define padrões de visitante
-            if (!auth()->check()) {
-                $course->is_enrolled = false;
-                $course->progress_percent = 0;
-                $course->target_route = route('courses.public', $course->id); // Manda pra Landing Page
-            } 
-            else {
-                // Lógica de Aluno Logado (igual tínhamos antes)
-                $course->completed_lessons_count = $course->lessons->whereIn('id', $userCompletedIds)->count();
-                
-                $course->progress_percent = ($course->lessons_count > 0) 
-                    ? round(($course->completed_lessons_count / $course->lessons_count) * 100) 
-                    : 0;
-                
-                // Se não tem o campo is_enrolled vindo do banco (admin as vezes não vem), checamos manual
-                if (!isset($course->is_enrolled)) {
-                     // Fallback simples
-                     $course->is_enrolled = auth()->user()->enrolledCourses()->where('course_id', $course->id)->exists();
-                }
-
-                if ($course->is_enrolled || auth()->user()->is_admin) {
-                    // Vai para a aula
-                    $nextLesson = $course->lessons
-                        ->whereNotIn('id', $userCompletedIds)
-                        ->sortBy('position')
-                        ->first();
-                    
-                    if (auth()->user()->is_admin) {
-                        $course->target_route = route('courses.show', $course->id);
-                    } elseif ($nextLesson) {
-                        $course->target_route = route('lessons.show', [$course->id, $nextLesson->id]);
-                    } else {
-                        $course->target_route = route('courses.show', $course->id);
-                    }
-                } else {
-                    // Logado mas não comprou -> Landing Page
-                    $course->target_route = route('courses.public', $course->id);
-                }
-            }
-            
-            // Correção da imagem
-            if ($course->image_url && !str_starts_with($course->image_url, '/storage')) {
-                $course->image_url = '/storage/' . $course->image_url;
-            }
+        // Se for admin, traz inclusive os deletados (Soft Deletes)
+        if (auth()->user()->is_admin) {
+            $query->withTrashed(); 
+        } else {
+            // Se não for admin, mostra apenas os publicados E ativos
+            $query->where('is_published', true);
         }
 
         return Inertia::render('Courses/Index', [
-            'courses' => $courses,
-            'isLoggedIn' => auth()->check() // Informa ao Vue se tem login
+            'courses' => $query->with('lessons')->get()
         ]);
     }
 
@@ -166,33 +111,43 @@ class CourseController extends Controller
         return redirect()->route('courses.index');
     }
 
-    public function edit(Course $course)
-    {
-        // Redireciona para o Show, pois unificamos a gestão lá
-        return redirect()->route('courses.show', $course->id);
-    }
-
-    public function update(Request $request, Course $course)
+    // 2. EDIÇÃO (EDIT) - Busca pelo ID manual para achar na lixeira
+    public function edit($id)
     {
         if (! auth()->user()->is_admin) { abort(403); }
-        
+
+        // withTrashed() permite editar um curso que está no "Arquivo Morto"
+        $course = Course::withTrashed()->with('lessons')->findOrFail($id);
+
+        return Inertia::render('Courses/Edit', [ // Ou 'Courses/Show' se você usa edição inline
+            'course' => $course
+        ]);
+    }
+
+    // 3. ATUALIZAÇÃO (UPDATE) - Permite salvar alterações em curso deletado
+    public function update(Request $request, $id)
+    {
+        if (! auth()->user()->is_admin) { abort(403); }
+
+        $course = Course::withTrashed()->findOrFail($id);
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'image' => 'nullable|image|max:2048',
-            'video_url' => 'nullable|url'
+            'video_url' => 'nullable|url',
+            'image' => 'nullable|image|max:2048', // Validação de imagem
         ]);
 
+        // Lógica de Upload de Imagem
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('courses', 'public');
-            $validated['image_url'] = $path;
+            $validated['image_url'] = $path; // Salva o caminho novo
         }
-        unset($validated['image']);
 
         $course->update($validated);
 
-        return redirect()->route('courses.show', $course->id)->with('success', 'Curso atualizado!');
+        return redirect()->back()->with('success', 'Curso atualizado com sucesso!');
     }
 
     public function destroy(Course $course)

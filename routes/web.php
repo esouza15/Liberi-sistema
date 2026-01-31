@@ -185,53 +185,23 @@ Route::get('/debug-aula/{courseId}/{lessonId}', function ($courseId, $lessonId) 
 });
 */
 
-Route::get('/debug-legacy/{id}', function ($id) {
-    // 1. Busca o Curso (Incluindo Lixeira)
-    $course = \App\Models\Course::withTrashed()->find($id);
+Route::get('/fix-storage', function () {
+    $target = storage_path('app/public');
+    $link = public_path('storage');
 
-    if (!$course) {
-        return "CRÍTICO: Curso ID $id não existe nem na lixeira.";
+    // Tenta rodar o comando nativo do Laravel
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        return 'Sucesso! Comando storage:link executado via Artisan.<br>' . \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Exception $e) {
+        // Se falhar, tenta criar o link simbólico manualmente (PHP puro)
+        if (!file_exists($link)) {
+             symlink($target, $link);
+             return "Sucesso! Link simbólico criado manualmente via PHP.";
+        } else {
+             return "O link já existe ou não pôde ser criado. Erro: " . $e->getMessage();
+        }
     }
-
-    // 2. Busca as Aulas (Incluindo Lixeira)
-    $lessons = \App\Models\Lesson::withTrashed()->where('course_id', $id)->get();
-
-    // 3. Testa a Matrícula do Aluno Remoto (ID 3)
-    // Atenção: Verifica na tabela enrollments
-    $studentId = 3; // ID do Remoto
-    $isEnrolled = \Illuminate\Support\Facades\DB::table('enrollments')
-        ->where('course_id', $id)
-        ->where('user_id', $studentId)
-        ->first();
-
-    // 4. Verifica a integridade da imagem
-    $imageStatus = 'Sem URL';
-    if ($course->image_url) {
-        // Tenta simular o caminho real
-        $imageStatus = $course->image_url;
-    }
-
-    return [
-        '--- STATUS DO CURSO ---' => [
-            'id' => $course->id,
-            'titulo' => $course->title,
-            'deletado_em (deleted_at)' => $course->deleted_at ? $course->deleted_at->toDateTimeString() : 'ATIVO (NULL)',
-            'imagem_url' => $imageStatus,
-        ],
-        '--- ALUNO REMOTO (ID 3) ---' => [
-            'matriculado_no_banco' => $isEnrolled ? 'SIM (Existe na tabela enrollments)' : 'NÃO (Não encontrado)',
-            'dados_matricula' => $isEnrolled
-        ],
-        '--- AULAS DO CURSO ---' => $lessons->map(function($l) {
-            return [
-                'id' => $l->id,
-                'titulo' => $l->title,
-                'deletado_em' => $l->deleted_at ? 'SIM (' . $l->deleted_at . ')' : 'NÃO',
-                'video_url' => $l->video_url
-            ];
-        }),
-        '--- DICA PARA O ADMIN ---' => 'Se o deleted_at estiver preenchido, o curso não aparece no courses.index padrão a menos que usemos withTrashed().',
-    ];
 });
 
 require __DIR__.'/auth.php';

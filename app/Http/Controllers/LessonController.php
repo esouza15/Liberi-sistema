@@ -57,33 +57,32 @@ class LessonController extends Controller
 
     public function show($courseId, $lessonId)
     {
-        // 1. Busca Curso e Aula (Permitindo itens da lixeira / Deletados)
+        // 1. Busca o Curso (Incluindo Lixeira)
         $course = \App\Models\Course::withTrashed()->findOrFail($courseId);
         
+        // 2. Busca a Aula Específica (Incluindo Lixeira)
         $lesson = \App\Models\Lesson::withTrashed()
             ->where('course_id', $courseId)
             ->findOrFail($lessonId);
 
         $user = auth()->user();
 
-        // 2. TRAVA DE SEGURANÇA PARA ITENS DELETADOS
-        // Se o curso ou a aula foram deletados, precisamos verificar permissão rigorosa.
+        // 3. VERIFICAÇÃO DE SEGURANÇA
         if ($course->deleted_at || $lesson->deleted_at) {
-            
-            // Verifica se o aluno REALMENTE comprou esse curso
+            // Verifica matrícula na tabela 'enrollments'
             $isEnrolled = $course->users()->where('user_id', $user->id)->exists();
 
-            // Se não for Admin E não for Aluno Matriculado -> Bloqueia (404)
             if (!$user->is_admin && !$isEnrolled) {
                 abort(404);
             }
         }
 
-        // 3. Renderiza a aula
+        // 4. RETORNO PARA O VUE
         return Inertia::render('Lessons/Watch', [
             'course' => $course,
             'lesson' => $lesson,
-            // Na lista lateral, também trazemos as aulas deletadas para manter a sequência
+            // IMPORTANTE: A lista lateral também precisa do withTrashed()
+            // Se não tiver isso, a lista lateral vem vazia e o JS pode quebrar
             'lessons' => $course->lessons()->withTrashed()->orderBy('position')->get(),
         ]);
     }

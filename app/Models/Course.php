@@ -20,6 +20,22 @@ class Course extends Model
         'image_url'
     ];
 
+    // Imagem de capa dos curso
+    public function getImageUrlAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        // Se já for uma URL completa (ex: http...), retorna ela.
+        if (str_starts_with($value, 'http')) {
+            return $value;
+        }
+
+        // Se for caminho relativo, adiciona o /storage/ na frente
+        return asset('storage/' . $value);
+    }
+
     // Um curso tem muitas aulas.
     public function lessons()
     {
